@@ -1,0 +1,145 @@
+1. FEEDBACK 
+
+ Thank you for downloading data from the ICES Data Centre, if you experienced
+ any problems or would like to provide feedback that will help us to improve 
+ our service, please email us at: accessions@ices.dk
+
+2. IMPORTANT 
+
+ This file is the counterpart to the data download with the code: jpufqdsst5td1sxozv2woyiz132271580529653802, 
+ part of the data was downloaded on 26/02/2020 03:34:57 by IP 174.109.87.142. 
+ Please read this before using these data as this file contains specific information about the use of 
+ these data,limitations and known issues. This file contains contact information
+ regarding  the origins of these data (where supplied) as well as how to reference
+ these data in a publication or data product. 
+
+ By downloading data from the ICES website [www.ices.dk] you are agreeing to
+ the terms and conditions of use as described in this document and any documents
+ referred to in this text.
+
+3. ICES CONTACT
+
+ For queries about this data download:
+
+ Web  :	http://www.ices.dk/marine-data/Pages/default.aspx
+ Email: accessions@ices.dk
+ Tel  :	+45 3338 6700
+ 
+4. PROJECT/DOWNLOAD SPECIFIC INFORMATION
+
+ The EcoSystemData application provides the user with the ability  to query the database 
+ and display results as maps, charts and tables. When downloading data the user 
+ only has access to the first 50000 rows. To have access to the data set as queried, the user can request this by
+ sending an email to ecosystemdata@ices.dk with the code provided above in the subject line. 
+ 
+ Note that additional data such as methods and QA may be available. To have access to the complete data set,
+ the user can request this by specifying the provided code plus the extra information required.
+ 
+ Once the request has been processed a link for the complete data will be sent to the user.
+
+5. DATA ACKNOWLEDGMENT
+
+ Please acknowledge the following data sources when using the data:
+ 
+ -"The data were supplied by The British Oceanographic Data Centre on behalf of the UK Marine Assessment and Reporting Group" 
+ -Agriculture Academy, Institute of Ichthyology, Szczecin, Poland 
+ -British Oceanographic Data Centre, Joseph Proudman Building, Liverpool, United Kingdom 
+ -Bundesanstalt für Gewässerkunde, Federal Institute of Hydrology, Koblenz, Germany 
+ -Bundesforschungsanstalt für Fischerei, Institut für Fischereiökologie, Hamburg, Germany 
+ -Centre for Environment, Fisheries and Aquaculture Science, Burnham Laboratory, Burnham-on-Crouch, United Kingdom 
+ -Department of the Baltic Sea, Academy of Sciences, Tallinn, Estonia 
+ -Direccao Geral do Ambiente, Alfragide, Amadora, Portugal 
+ -Environmental Protection Agency, Department of Marine Research, Klaipeda, Lithuania 
+ -Estonian Environment Agency, Keskkonnaagentuur, Tallinn, Estonia 
+ -Finnish Environment Institute, Helsinki, Finland 
+ -Finnish Environment Institute, Laboratory, Helsinki, Finland 
+ -Fisheries Research Services, Marine Laboratory, Aberdeen, United Kingdom 
+ -Geological Survey of Sweden, Uppsala, Sweden 
+ -Heilsufrøðiliga Starvsstovan, Food and Environmental Agency, Tórshavn, Denmark 
+ -IFREMER, Centre de Brest, Plouzané, France 
+ -IFREMER, Centre de Nantes, DEL/PC, Nantes Cédex 3, France 
+ -ILVO Fisheries, Institute for Agricultural and Fisheries Research, Oostende, Belgium 
+ -Institute of Marine Research, Bergen-Nordnes, Norway 
+ -Institute of Meteorology and Water Management, Department of Oceanography and Baltic Monitoring, Gdynia, Poland 
+ -Instituto de Investigacao des Pescas e do Mar, Lisboa, Portugal 
+ -Instituto Español de Oceanografia, C. O. Vigo, Canido-Cabo Estay, Vigo, Spain 
+ -Instituto Hidrografico, Lisboa, Portugal 
+ -Irish Marine Institute, Fisheries Research Centre, Abbotstown Laboratory Complex, Dublin 15, Ireland 
+ -Landesamt für Landwirtschaft, Lebensmittelsicherheit
+und Fischerei, Mecklenburg- Vorpommern, Rostock, Germany 
+ -Landesamt für Umwelt, Naturschutz und Geologie in Mecklenburg-Vorpommern, Mecklenburg-Vorpommern, Güstrow, Germany 
+ -Landesforschungsanstalt für Landwirtschaft und Fischerei, Mecklenburg-Vorpommern, Gülzow (LFA), Germany 
+ -Latvian Institute of Aquatic Ecology, Institute of Aquatic Ecology, Marine Monitoring Centre, Riga, Latvia 
+ -Management Unit of the North Sea and Scheldt Estuary, Mathematical Models, Brussels, Belgium 
+ -Marine Research Institute, Reykjavik, Iceland 
+ -Marine Systems Institute at Tallinn University of Technology, TTU Meresusteemide Instituut, Tallinn, Estonia 
+ -Matís ohf. / Icelandic Food and Biotech R&D (former Icelandic Fisheries Lab), Reykjavik, Iceland 
+ -Matís ohf. / Icelandic Food and Biotech R&D, Reykjavík, Iceland 
+ -National Environmental Research Institute, Chemical and Community data, Roskilde, Denmark 
+ -National Environmental Research Institute, Department of Arctic Environment, Roskilde, Denmark 
+ -National Institute for Coastal and Marine Manageme, The Hague, The Netherlands 
+ -National Institute of Nutrition and Seafood Research (NIFES), Bergen, Norway 
+ -Naturhistoriska Riksmuseet, Miljøgiftsgruppen PMK, Stockholm, Sweden 
+ -Niedersächsischer Landesbetrieb für Wasserwirtschaft, Küsten- und Naturschutz, Betriebsstelle Hannover-Hildesheim, Hildesheim, Germany 
+ -Niedersächsisches Landesamt für Ökologie, Forschungsstelle Küste, Norderney, Germany 
+ -Norwegian Institute for Water Research, Oslo, Norway 
+ -Norwegian Polar Institute, Oslo, Norway 
+ -Rijksinstituut voor Vissery Onderzoek, Ijmuiden, The Netherlands 
+ -Rijks-Kwaliteitsinstituut voor land- en tuinbouwprodukten, Wageningen, The Netherlands 
+ -Rijkswaterstaat,  Monitoring en Laboratorium, Lelystad, The Netherlands 
+ -State Agency for Agriculture, Environment and Rural Areas Schleswig-Holstein
+Schleswig-Holstein, Schleswig-Holstein, Flintbek, Germany 
+ -Swedish Environmental Research Institute, IVL Svenska Miljöinstitutet, Göteborg, Sweden 
+ -Swedish Meteorological and Hydrological Institute, Oceanographic Unit, Vastra Frolunda, Sweden 
+ -Swedish University of Agricultural Sciences, Department of Aquatic Resources, Oregrund, Sweden 
+ -Umhvørvisstovan, Argir, Denmark 
+ -University College of Kalmar, Inst. Natural Sciences and Technology, Kalmar, Sweden 
+ -Veterinærinstituttet, Oslo 1, Norway 
+ -Wageningen IMARES, Ijmuiden, The Netherlands 
+ -Wassergütestelle Elbe, Hamburg, Germany 
+  
+
+6. TERMS OF USE: DATA 
+
+ ICES makes data available in an open, timely and easy way to users, but ICES 
+ remains dependent on data contributions.
+ - Correct and appropriate data interpretation is solely the responsibility 
+   of data users.
+ - Data Users must not expressly or otherwise imply ICES substantiation of their 
+   work, results, conclusions and/or recommendations.
+ - Data sources must be duly acknowledged.
+ - Data Users must respect any and all restrictions on the use or reproduction 
+   of data such as restrictions on use for commercial purposes.
+ - Data Users are obliged to inform ICES of any suspected problems in the data.
+ - Data Users are encouraged to inform ICES of possible sources of other relevant
+   data.
+
+ The full ICES data policy and terms of use can be viewed at:
+ http://ices.dk/marine-data/guidelines-and-policy/Pages/default.aspx. 
+
+ Data held at the ICES Data Centre are used for various assessments and working 
+ group purposes. The data guidelines and procedures for these can be viewed 
+ at: http://ices.dk/marine-data/guidelines-and-policy/Pages/ICES-guidelines-on-data-preparation.aspx
+
+7. TERMS OF USE: SOFTWARE 
+
+ Software is available for use from the ICES website that is provided as an aid 
+ for data users to work with, analyse and convert data: http://ices.dk/marine-data/tools/Pages/Software.aspx
+
+ The downloading and use of any software from http://www.ices.dk/ grants you only
+ a limited, nonexclusive license for use solely by you for your own personal use 
+ and not for republication, distribution, assignment, sublicense, sale or other 
+ use. No part of any content, coding or documentation may be reproduced in any 
+ form or incorporated into any information retrieval system without the express
+ permission of ICES or the third party that provided the software
+ on http://www.ices.dk/
+
+ The downloading and installation of software from http://www.ices.dk/ is at your
+ own risk. ICES undertakes every effort to ensure software is compatible with the
+ latest windows operating system, or other systems as defined in specific readme 
+ or a software documentation file. ICES accepts no responsibility for the correct
+ functioning and operation of software downloaded from http://www.ices.dk/, nor 
+ any incidental, special or consequential damages associated with downloading and 
+ installing software  provided by ICES.
+
+- END OF FILE -

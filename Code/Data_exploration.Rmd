@@ -1,0 +1,177 @@
+---
+output: 
+  pdf_document:
+    keep_tex: yes
+    fig_caption: yes
+    number_sections: yes
+geometry: margin=2.54cm
+title: "Insert title of project here"
+subtitle: "Web address for GitHub repository"
+author: "Name"
+fontsize: 12pt
+mainfont: Times New Roman
+editor_options: 
+  chunk_output_type: console
+---
+
+\newpage
+\tableofcontents 
+\newpage
+\listoftables 
+\newpage
+\listoffigures 
+\newpage
+
+```{r setup, include=FALSE}
+# Set your working directory
+getwd()
+
+# Load your packages
+#install.packages("sf")
+#install.packages("rgdal")
+#install.packages("raster")
+#install.packages("maps")
+library(sf)
+library(rgdal)
+library(raster)
+library(tidyverse)
+library(maps)
+library(leaflet)
+library(mapview)
+
+
+# Set your ggplot theme
+my.theme <- theme_minimal()+
+  theme(legend.position = "top")
+theme_set(my.theme)
+
+# Load your datasets
+
+```
+# file size was too large to upload to git, filtered out metals of interest and re-wrote csv as follows:
+metals_biota <- read.csv("./Data/Raw/ContaminantsBiota.csv")
+
+my.metals <- c("HG", "CD", "PB", "AS", "CR", "CR3+", "CR6+", "CU", "NI", "MN", "FE", "BA")
+metals_biota.shrink <- metals_biota %>%
+  filter(PARAM %in% my.metals)%>%
+  droplevels()
+table(metals_biota.shrink$PARAM)
+
+write.csv(metals_biota.shrink, "./Data/Raw/ContaminantsBiota.csv")
+
+#install.packages("osmdata")
+library(osmdata)
+
+
+# Rationale and Research Questions
+Are concentrations of heavy metals in marine biota increasing?
+
+\newpage
+
+# Dataset Information
+
+Data was downloaded from the DOME data portal (http://dome.ices.dk/views/ContaminantsBiota.aspx) on Feb 25, 2020. 
+
+\newpage
+
+# Exploratory Analysis 
+
+```{r}
+str(metals_biota)
+summary(metals_biota$MYEAR)
+unique(metals_biota$PARAM)
+
+summary(metals_biota$VFLAG) # remove C, D, and S? A means acceptable, assume that nothing means it's okay
+summary(metals_biota$BASIS) # is there any way to convert between these??probs not. D - dry wt, L - lipid wt, W - wet weight, what if it doesn't specify anything?
+summary(metals_biota$QFLAG) # how to deal with detection limits? there is right censored and left censored data...
+summary(metals_biota$MUNIT) # need to convert units after filtering, see what's left
+
+# what about info on what organs/tissues were used? or does this assume it was the whole organisms? not sure on this --- it's the MATRX variable
+sort(table(metals_biota$MATRX), decreasing = T)[1:5] # top 3 have a lot more than the rest
+
+# which heavy metals should I look at?? 
+my.metals <- c("HG", "CD", "PB", "AS", "CR", "CR3+", "CR6+", "CU", "NI", "MN", "FE", "BA")
+# no Fe or Mn in this dataset, possibly because they are considered to be nutrients
+my.tissues <- c("LI", "MU", "SB")
+
+metals_biota_filtered <- metals_biota %>%
+  filter(PARAM %in% my.metals &         # keep the 8 metals of interest
+           VFLAG %in% c("", " ", "A") & # remove data of "suspect" quality
+           BASIS == "W" &               # exclude dry wt and lipid wt measurements 
+           MATRX %in% my.tissues) %>%   # keep records for top 3 most common tissues
+  droplevels()
+
+unique(metals_biota_filtered$PARAM)
+
+metals_biota_filtered$DATE <- as.Date(metals_biota_filtered$DATE, format = "%d/%m/%Y")
+class(metals_biota_filtered$DATE)
+
+allmetals <- ggplot(metals_biota_filtered, aes(x=DATE, y = Value))+
+  geom_point(aes(color = PARAM), size = .5, alpha = .5)+
+  scale_color_viridis_d()+
+  geom_smooth(aes(color = PARAM), method = "lm")+
+  facet_wrap(~PARAM)
+
+```
+## top MATX codes - 
+LI - Liver (n=74,688)
+MU - muscle (n=58,359)
+SB - whole soft body (n=47058)
+WO - whole organism (n=1651)
+KI - kidney (n=1031)
+
+
+```{r}
+HG <- metals_biota_filtered %>%
+  filter(PARAM == "HG")
+
+HGpoints <- st_as_sf(HG, coords = c("Longitude", "Latitude"),  crs=4326)
+
+extent(HGpoints)
+crs(HGpoints)
+
+
+
+#read in port locations shapefile
+ports <- st_read("./Data/SpatialData/ne_50m_ports.shp")
+ecoregions <- st_read("./Data/SpatialData/ICES_ecoregions_20171207_erase_ESRI.shp")
+mapview(HGpoints, color = "orange")+
+  mapview(ports)+
+  mapview(ecoregions, color = "blue")
+
+
+osm.coastlines <- opq (bbox = c(-75,30,55,85)) %>% # c(xmin, ymin, xmax, ymax)
+  add_osm_feature("natural", "coastline") %>% 
+  osmdata_sf() 
+
+
+library(geosphere)
+
+distance <- geosphere::dist2Line(p = st_coordinates(HGpoints), 
+                         line = 
+st_coordinates(osm.coastlines$osm_lines)[,1:2])
+```
+
+
+\newpage
+
+# Analysis
+
+
+
+## Question 1: <insert specific question here and add additional subsections for additional questions below, if needed>
+
+## Question 2: 
+
+
+
+
+\newpage
+
+# Summary and Conclusions
+
+
+\newpage
+
+# References
+<add references here if relevant, otherwise delete this section> 
