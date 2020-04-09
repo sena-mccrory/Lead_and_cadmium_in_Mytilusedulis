@@ -22,7 +22,7 @@ ices_mytilus.edulis_cd.pb.hg.cu <- ices_metals.top5 %>%
             PARAM %in% c("CD", "PB", "HG", "CU") &
             VFLAG != "S" &  # remove suspect value measurments
             MATRX == "SB" & # soft body measurments only (many more than other matrices)
-            BASIS == "W")%>%  # wet weight samples only (remove dry weight)
+            BASIS == "W")%>%  # wet weight samples only (remove dry weight samples)
    select(Country, MYEAR:Species,NOINP, MATRX, Value,PARAM:QFLAG, DETLI:UNCRT)%>%
   mutate(DETLI = DETLI/1000, Value = Value/1000)%>%
   rename(DETLI.mgperkg = DETLI, Value.mgperkg = Value)%>%

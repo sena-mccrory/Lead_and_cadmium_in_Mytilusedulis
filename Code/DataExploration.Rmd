@@ -1,0 +1,130 @@
+---
+title: "DataExploration"
+author: "Sena McCrory"
+date: "4/9/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+## Setup
+```{r}
+getwd()
+library(tidyverse)
+library(viridis)
+library(sf)
+library(scales)
+library(nationalparkcolors)
+
+mytilus.metals <- read.csv("./Data/Processed/ICES_Mytilusedulis_Cd_Pb_Hg_Cu.csv")
+mytilus.metals$DATE <- as.Date(mytilus.metals$DATE, format = "%d/%m/%Y")
+
+# rename metals
+mytilus.metals$PARAM <- gsub("CD", "Cd", mytilus.metals$PARAM)
+mytilus.metals$PARAM <- gsub("CU", "Cu", mytilus.metals$PARAM)
+mytilus.metals$PARAM <- gsub("HG", "Hg", mytilus.metals$PARAM)
+mytilus.metals$PARAM <- gsub("PB", "Pb", mytilus.metals$PARAM)
+table(mytilus.metals$PARAM)
+
+# create separate datasets for each contaminant
+mytilus.pb <- mytilus.metals %>%
+   filter(PARAM == "Pb")%>%
+   droplevels()
+
+my.theme <- theme_minimal(base_size = 14)+
+  theme(legend.position = "top")
+theme_set(my.theme)
+my.colors <- park_palette("CraterLake")[c(1,2,5,7)]
+
+```
+
+## distribution of data
+```{r}
+# create dataset with out major outliers for display purposed only
+mytilus.metals.rmoutliers <- mytilus.metals%>%
+          filter((PARAM == "Cd" & Value.mgperkg < 30)| 
+                    (PARAM == "Cu" & Value.mgperkg < 300) |
+                    (PARAM =="Hg" & Value.mgperkg <10) |
+                    PARAM =="Pb")
+   
+
+# points over time
+ggplot(mytilus.metals.rmoutliers, aes(x=as.Date(DATE), y = Value.mgperkg))+
+   geom_point(aes(color = PARAM), alpha = .5)+
+   scale_color_manual(values = my.colors)+
+   #scale_y_log10(labels = trans_format("log10", math_format(10^.x)))+
+   labs(x= "Date", y = "Log Concentration (mg/kg wet wt)", color = "Metal")+
+   facet_wrap(~PARAM, scales = "free_y", ncol = 1)
+
+#few samples for finland, latvia, lithuania
+
+#histogram
+ggplot(mytilus.metals.rmoutliers, aes(x=Value.mgperkg, fill = PARAM))+
+   geom_histogram(bins = 40)+
+   scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+   scale_fill_manual(values = my.colors)+
+   facet_wrap(~PARAM, scales = "fixed")+
+   labs(x="Log Concentration (mg/kg wet wt)", y = "Count", fill = "Metal")
+#log transform conc
+```
+
+
+## map of data
+```{r}
+# data
+coastlines_global_wgs84 <- st_read("./Data/SpatialData/GSHHS_shp/l/GSHHS_l_L1.shp")
+
+metal_points_wgs84 <- mytilus.metals %>%
+  st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326, dim = "XY")
+head(metal_points_wgs84)
+
+ICES_ecoregions_wgs84 <- st_read("./Data/SpatialData/ICES_ecoregions_20171207_erase_ESRI.shp")
+
+
+# check crs - 
+st_crs(coastlines_global_wgs84) <- 4326
+st_crs(metal_points_wgs84) <- 4326
+st_crs(ICES_ecoregions_wgs84) <- 4326
+
+# create bbox based on pb sampling points
+my_bbox <- ICES_ecoregions_wgs84 %>%
+  st_buffer(dist = 2)%>%
+  st_bbox()
+my_bbox
+
+my_bbox_ggmap <- c(left = my_bbox[[1]], bottom = my_bbox[[2]], right = my_bbox[[3]], top = my_bbox[[4]])
+
+# create an ocean basemap - looks like ggmap doesn't work for far north coords, cannot reproject :( booooo
+
+#ocean_basemap <- get_map(my_bbox_ggmap, maptype = "watercolor", source = 'stamen', zoom = 3)
+#ocean_basemap <- st_transform(ocean_basemap, crs = 4326)
+
+```
+
+
+## create a map
+
+```{r}
+
+pdf("./Output/StudyRegionMap.pdf", width = 11, height = 8.5)
+ggplot()+
+  geom_sf(data = coastlines_global_wgs84, fill = NA, lwd = 1, inherit.aes = FALSE)+
+  geom_sf(data = ICES_ecoregions_wgs84, alpha = 0.5, inherit.aes = F)+ 
+  geom_sf_text(aes(label = Ecoregion), data = ICES_ecoregions_wgs84, 
+               alpha = .4)+
+  geom_sf(aes(color = PARAM), data = metal_points_wgs84, inherit.aes = F,
+          size = 1, alpha = 0.5, shape = 1)+ 
+  scale_color_manual(values = my.colors) + 
+  coord_sf(xlim=c(-44, 68.5), ylim = c(30.2, 90), crs = 4326)+
+  labs(color = "Conc in Mytilus edulis (mg/kg wet wt)")+
+  theme_minimal()+
+   facet_wrap(~PARAM)
+dev.off()
+
+#summary(ICES_ecoregions_wgs84$Ecoregion)
+
+#class(cadmium_biota_wgs84$Value)
+#ggplot(cadmium_biota_wgs84)+
+#  geom_histogram(aes(x=Value))
+
+```
