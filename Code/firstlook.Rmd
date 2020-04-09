@@ -1,0 +1,228 @@
+---
+output: 
+  pdf_document:
+    keep_tex: yes
+    fig_caption: yes
+    number_sections: yes
+geometry: margin=2.54cm
+title: "Insert title of project here"
+subtitle: "Web address for GitHub repository"
+author: "Sena McCrory"
+fontsize: 12pt
+mainfont: Times New Roman
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r setup, include=FALSE}
+# Set your working directory
+getwd()
+
+# Load your packages
+
+library(tidyverse)
+library(viridis)
+library(lubridate)
+
+
+# Set your ggplot theme
+my.theme <- theme_minimal()+
+  theme(legend.position = "top")
+theme_set(my.theme)
+
+# Load your datasets
+ICES_metals.in.biota <- read.csv("./Data/Raw/ContaminantsBiota20202263412jpufqdsst5td1sxozv2woyiz.csv")
+table(ICES_metals.in.biota$PARAM)
+table(ICES_metals.in.biota$Country)
+
+my.metals <- c("HG", "CD", "PB", "AS", "CR", "CR3+", "CR6+", "CU", "NI", "MN", "FE", "BA")
+ICES_my.metals <- ICES_metals.in.biota %>%
+  filter(PARAM %in% my.metals)%>%
+  droplevels()
+table(ICES_my.metals$PARAM)
+table(ICES_my.metals$Country)
+table(ICES_my.metals$Species)
+
+species.summary <- ICES_my.metals %>%
+  group_by(Species)%>%
+  tally()
+summary(species.summary$n)
+top.5.species <- c("Mytilus edulis", "Gadus morhua", "Platichthys flesus", "Clupea harengus", "Limanda limanda")
+
+ices_metals.top5 <- ICES_my.metals%>%
+  filter(Species %in% top.5.species)%>%
+  filter(MUNIT == "ug/kg")%>%
+  droplevels()
+#table(ices_metals.top5$MUNIT)
+#ices_metals.top5$MYEAR <- as.Date(ices_metals.top5$MYEAR, format = "%Y", origin = "1970-01-01")
+
+ggplot(ices_metals.top5, aes(x=MYEAR, y = Value))+
+  geom_point(aes(color = Species), alpha = .5, size = 2, shape = 1)+
+  facet_wrap(~PARAM, scales = "free")+
+  scale_color_viridis_d(end = .9, option = "magma")
+# barium was only measured recently, may be trend for As, difficult to tell for others due to some high outliers
+
+ices_as <- ices_metals.top5%>%
+  filter(PARAM == "AS")%>%
+  droplevels()
+ggplot(ices_as, aes(x=MYEAR, y = Value))+
+  geom_point(aes(color = Species), alpha = .5, size = 2, shape = 1)+
+  #ylim(c(0,10000))+
+  scale_color_viridis_d(end = .9, option = "magma")+
+  facet_wrap(~Species, scales = "free_y")
+# gap in clupea harengus monitoring
+
+#Barium
+ices_ba <- ices_metals.top5%>%
+  filter(PARAM == "BA")%>%
+  droplevels()
+ggplot(ices_ba, aes(x=MYEAR, y = Value))+
+  geom_point(aes(color = Species), alpha = .5, size = 2, shape = 1)+
+  #ylim(c(0,10000))+
+  scale_color_viridis_d(end = .9, option = "magma")+
+  facet_wrap(~Species, scales = "free_y")
+# really sparse, eliminate from datasets
+
+#Cadmium
+ices_cd <- ices_metals.top5%>%
+  filter(PARAM == "CD")%>%
+  droplevels()
+ggplot(ices_cd, aes(x=MYEAR, y = Value))+
+  geom_point(aes(color = Species), alpha = .5, size = 2, shape = 1)+
+  #ylim(c(0,10000))+
+  scale_color_viridis_d(end = .9, option = "magma")+
+  facet_wrap(~Species, scales = "free_y")
+#outliers all over the place
+
+#Chromium
+ices_cr <- ices_metals.top5%>%
+  filter(PARAM == "CR")%>%
+  droplevels()
+ggplot(ices_cr, aes(x=MYEAR, y = Value))+
+  geom_point(aes(color = Species), alpha = .5, size = 2, shape = 1)+
+  #ylim(c(0,10000))+
+  scale_color_viridis_d(end = .9, option = "magma")+
+  facet_wrap(~Species, scales = "free_y")
+#good data for mytilus and not much else
+
+# copper
+ices_cu <- ices_metals.top5%>%
+  filter(PARAM == "CU")%>%
+  droplevels()
+ggplot(ices_cu, aes(x=MYEAR, y = Value))+
+  geom_point(aes(color = Species), alpha = .5, size = 2, shape = 1)+
+  #ylim(c(0,10000))+
+  scale_color_viridis_d(end = .9, option = "magma")+
+  facet_wrap(~Species, scales = "free_y")
+#outliers for mytilus
+
+ices_hg <- ices_metals.top5%>%
+  filter(PARAM == "HG")%>%
+  droplevels()
+ggplot(ices_hg, aes(x=MYEAR, y = Value))+
+  geom_point(aes(color = Species), alpha = .5, size = 2, shape = 1)+
+  #ylim(c(0,10000))+
+  scale_color_viridis_d(end = .9, option = "magma")+
+  facet_wrap(~Species, scales = "free_y")
+# big outliers for mytilus and platichthys
+
+ices_ni <- ices_metals.top5%>%
+  filter(PARAM == "NI")%>%
+  droplevels()
+ggplot(ices_ni, aes(x=MYEAR, y = Value))+
+  geom_point(aes(color = Species), alpha = .5, size = 2, shape = 1)+
+  #ylim(c(0,10000))+
+  scale_color_viridis_d(end = .9, option = "magma")+
+  facet_wrap(~Species, scales = "free_y")
+#lots of data gaps - maybe remove this one too
+
+ices_pb <- ices_metals.top5%>%
+  filter(PARAM == "PB")%>%
+  droplevels()
+ggplot(ices_pb, aes(x=MYEAR, y = Value))+
+  geom_point(aes(color = Species), alpha = .5, size = 2, shape = 1)+
+  #ylim(c(0,10000))+
+  scale_color_viridis_d(end = .9, option = "magma")+
+  facet_wrap(~Species, scales = "free_y")
+# outliers for several species may be problematic? 
+
+# perhaps just focus on mytils edulis? and maybe gadus morhua, too if time
+
+```
+
+review of metal concentrations and bioavailability in marine environments
+https://scialert.net/fulltextmobile/?doi=jas.2004.1.20
+
+mytilus edulis heavy metal concentrations https://www.researchgate.net/publication/14507180_Heavy_Metals_in_Blue_Mussels_Mytilus_edulis_in_the_Bergen_Harbor_Area_Western_Norway 
+
+## Mytilus edulis only, metals to look at - Cd, Pb, Hg, Cu, Zn, remove "suspect" values from dataset
+```{r}
+ices_mytilus.edulis_cd.pb.hg.cu <- ices_metals.top5 %>%
+  filter(Species == "Mytilus edulis" & 
+           PARAM %in% c("CD", "PB", "HG", "CU"))%>%  
+  droplevels()
+ices_mytilus.edulis_cd.pb.hg.cu$DATE <- as.Date(ices_mytilus.edulis_cd.pb.hg.cu$DATE, format = "%d/%m/%Y")
+
+
+
+table(ices_mytilus.edulis_cd.pb.hg.cu$VFLAG)
+table(ices_mytilus.edulis_cd.pb.hg.cu$MATRX) # filer to include only soft body
+table(ices_mytilus.edulis_cd.pb.hg.cu$BASIS) # dry weight or wet weight?? wet weight has more samples, but what about years and country coverage
+
+wet <- ices_mytilus.edulis_cd.pb.hg.cu%>%
+  filter(BASIS =="W")%>%
+  droplevels()
+summary(wet$Country)
+dry <- ices_mytilus.edulis_cd.pb.hg.cu%>%
+  filter(BASIS =="D")%>%
+  droplevels()
+summary(dry$Country)
+#let's choose wet weight samples only just to make life simpler
+
+ices_mytilus.edulis_cd.pb.hg.cu <- ices_metals.top5 %>%
+  filter(Species == "Mytilus edulis" & 
+           PARAM %in% c("CD", "PB", "HG", "CU", "ZN") & 
+           VFLAG != "S" &  # remove suspect value measurments
+           MATRX == "SB" & # soft body measurments only (many more than other matrices)
+           BASIS == "W")%>%  # wet weight samples only (remove dry weight)
+  droplevels()
+ices_mytilus.edulis_cd.pb.hg.cu$DATE <- as.Date(ices_mytilus.edulis_cd.pb.hg.cu$DATE, format = "%d/%m/%Y")
+
+
+
+ggplot(ices_mytilus.edulis_cd.pb.hg.cu, aes(x=as.Date(DATE), y = Value))+
+  geom_point(aes(color = PARAM), shape = 1, alpha = .5)+
+  scale_color_viridis_d(option = "magma", end = .9)+
+  facet_wrap(~PARAM, scales = "free_y")
+```
+### outliers
+ - Cd has one major outlier at ~40000
+ Cu - has 1 high outlier > 2e5
+ Hg - 1 outlier > 5000
+ Pb - a whole cluster of outliers >100000
+
+### convert ug/kg to mg/kg
+```{r}
+ices_mytilus.edulis_cd.pb.hg.cu$Value.mgperkg <- ices_mytilus.edulis_cd.pb.hg.cu$Value / 1000
+```
+
+### drop unneeded columns
+```{r}
+ices_mytilus.edulis_cd.pb.hg.cu.select <- ices_mytilus.edulis_cd.pb.hg.cu %>%
+  select(Country, MYEAR:Species,NOINP, MATRX, Value.mgperkg,PARAM:QFLAG, DETLI:UNCRT)%>%
+  mutate(DETLI = DETLI/1000)%>%
+  rename(DETLI.mgperkg = DETLI)
+```
+
+### censored data...
+```{r}
+# Quality flags - many were censored at the detection or limit of quantification
+table(ices_mytilus.edulis_cd.pb.hg.cu.select$QFLAG)
+summary(ices_mytilus.edulis_cd.pb.hg.cu.select$DETLI.mgperkg)
+#just something to keep in mind
+
+```
+
+
+
