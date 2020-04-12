@@ -18,25 +18,17 @@ library(nationalparkcolors)
 library(lubridate)
 library(cowplot)
 
-mytilus.allmetals <- read.csv("./Data/Processed/ICES_Mytilusedulis_Cd_Pb_Hg_Cu.csv")
+mytilus.metals <- read.csv("./Data/Processed/ICES_Mytilusedulis_Cd_Pb_Hg_Cu.csv")
 mytilus.metals$DATE <- as.Date(mytilus.metals$DATE, format = "%d/%m/%Y")
 
 table(mytilus.metals$PARAM)
 
-mytilus.metals <- mytilus.allmetals%>%
-   filter(PARAM == "Pb" | PARAM == "Cd")
-
-# create separate datasets for each contaminant?
-mytilus.pb <- mytilus.metals %>%
-   filter(PARAM == "Pb")%>%
-   droplevels()
+# filter just for Cadmium
 mytilus.cd <- mytilus.metals %>%
    filter(PARAM == "Cd")%>%
    droplevels()
 
-class(mytilus.cd$DATE)
-
-
+# set theme for figures
 my.theme <- theme_minimal(base_size = 14)+
   theme(legend.position = "top")
 theme_set(my.theme)
@@ -48,39 +40,37 @@ my.colors <- park_palette("CraterLake")[c(1,2,5,7)]
 
 FAO Codex Alimentarius Maximum Level for metals in mussels (bivalves)
 Cadmium: 2 mg/kg
-lead does not have FAO Maximum Level established
+other metals don't have MLs established
 
 ```{r}
+
 # create dataset with out major outliers for display purposed only
-mytilus.metals.rmoutliers <- mytilus.metals%>%
-          filter((PARAM == "Cd" & Value.mgperkg < 30)| 
-                    PARAM =="Pb")
+mytilus.cd.rmoutliers <- mytilus.cd %>%
+          filter(Value.mgperkg < 30)
    
 
 # points over time
-ggplot(mytilus.metals.rmoutliers, aes(x=as.Date(DATE), y = Value.mgperkg))+
+ggplot(mytilus.cd.rmoutliers, aes(x=as.Date(DATE), y = Value.mgperkg))+
    geom_point(aes(color = PARAM), alpha = .5)+
    scale_color_manual(values = my.colors)+
-   #scale_y_log10(labels = trans_format("log10", math_format(10^.x)))+
    labs(x= "Date", y = "Log Concentration (mg/kg wet wt)", color = "Metal")+
-   facet_wrap(~PARAM, scales = "free_y", ncol = 1)
-
+   geom_hline(yintercept=2, linetype ="dashed")
 
 #few samples for finland, latvia, lithuania
 
 #histogram
-ggplot(mytilus.metals.rmoutliers, aes(x=Value.mgperkg, fill = PARAM))+
+ggplot(mytilus.cd.rmoutliers, aes(x=Value.mgperkg, fill = PARAM))+
    geom_histogram(bins = 40)+
    scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
    scale_fill_manual(values = my.colors)+
-   facet_wrap(~PARAM, scales = "fixed")+
-   labs(x="Log Concentration (mg/kg wet wt)", y = "Count", fill = "Metal")
+   labs(x="Log Concentration (mg/kg wet wt)", y = "Count", fill = "Metal")+
+   geom_vline(xintercept=2, linetype ="dashed")
 #log transform conc
 ```
 
 ## visualization for time series analysis
 ```{r}
-ggplot(mytilus.metals.rmoutliers, aes(x=MYEAR, y=1))+
+ggplot(mytilus.metals, aes(x=MYEAR, y=1))+
    geom_point()+
    facet_wrap(~PARAM)
 summary(mytilus.metals$MYEAR)
@@ -90,39 +80,9 @@ summary(mytilus.metals$MYEAR)
 mytilus.cd.yearly <- mytilus.cd %>%
    group_by(MYEAR)%>%
    dplyr::summarise(Conc = median(Value.mgperkg))
-cd.yearly <- ggplot(mytilus.cd.yearly, aes(x=MYEAR, y = Conc))+
+ggplot(mytilus.cd.yearly, aes(x=MYEAR, y = Conc))+
    geom_line(color = my.colors[1], size = 1)
 
-mytilus.pb.yearly <- mytilus.pb %>%
-   group_by(MYEAR)%>%
-   dplyr::summarise(Conc = median(Value.mgperkg))
-pb.yearly <-ggplot(mytilus.pb.yearly, aes(x=MYEAR, y = Conc))+
-   geom_line(color = my.colors[4], size = 1)
-
-plot_grid(cd.yearly, pb.yearly, align = "v", nrow = 2)
-
-# aggregate by month
-mytilus.pb.monthly <- mytilus.pb%>%
-   mutate(Month = format.Date(DATE, format = "%m"))%>%
-   group_by(MYEAR,Month)%>%
-   dplyr::summarise(Conc = median(Value.mgperkg))%>%
-   mutate(Month.Year = paste(MYEAR,Month,"01",sep = ""))
-mytilus.pb.monthly$Month.Year <- as.Date(mytilus.pb.monthly$Month.Year, format = "%Y%m%d", origin = "1970-01-01")
-ggplot(mytilus.pb.monthly, aes(x=as.Date(Month.Year), y = Conc))+
-   geom_point(color = my.colors[4], size = 1)+
-   ylim(0,4)
-#looks like there are too many months missing before 1990 to use monthly data, stick to yearly averages, or perhaps seasons?
-# or maybe just look at post 1990?
-
-mytilus.cd.monthly <- mytilus.cd %>%
-   mutate(Month = format.Date(DATE, format = "%m"))%>%
-   group_by(MYEAR,Month)%>%
-   dplyr::summarise(Conc = median(Value.mgperkg))%>%
-   mutate(Month.Year = paste(MYEAR,Month,"01",sep = ""))
-mytilus.cd.monthly$Month.Year <- as.Date(mytilus.cd.monthly$Month.Year, format = "%Y%m%d", origin = "1970-01-01")
-ggplot(mytilus.cd.monthly, aes(x=as.Date(Month.Year), y = 1))+
-   geom_point(color = my.colors[4], size = 1)+
-   ylim(0,3)
 ```
 seem to be a lot more weird stuff going on before 1990, 
 fewer samples? more noise?
@@ -163,11 +123,15 @@ ggplot()+
   theme_minimal()+
    theme(legend.position = "none", 
          panel.grid.major = element_blank(), 
-         panel.grid.minor = element_blank(),
-         panel.border = element_rect(colour = "darkgray", 
-                                     fill=NA, size=1))+
-   facet_wrap(~PARAM, nrow = 2)
+         panel.grid.minor = element_blank())+
+   facet_wrap(~PARAM)
 dev.off()
+
+#summary(ICES_ecoregions_wgs84$Ecoregion)
+
+#class(cadmium_biota_wgs84$Value)
+#ggplot(cadmium_biota_wgs84)+
+#  geom_histogram(aes(x=Value))
 
 ```
 

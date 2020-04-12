@@ -16,7 +16,8 @@ getwd()
 # Load dataset
 ICES_metals.in.biota <- read.csv("./Data/Raw/ContaminantsBiota20202263412jpufqdsst5td1sxozv2woyiz.csv")
 
-ices_mytilus.edulis_cd.pb.hg.cu <- ices_metals.top5 %>%
+
+ices_mytilus.edulis_cd.pb.hg.cu <- ICES_metals.in.biota %>%
   filter(Species == "Mytilus edulis" & 
             MUNIT == "ug/kg" & # filter measurement units
             PARAM %in% c("CD", "PB", "HG", "CU") &
@@ -24,11 +25,17 @@ ices_mytilus.edulis_cd.pb.hg.cu <- ices_metals.top5 %>%
             MATRX == "SB" & # soft body measurments only (many more than other matrices)
             BASIS == "W")%>%  # wet weight samples only (remove dry weight samples)
    select(Country, MYEAR:Species,NOINP, MATRX, Value,PARAM:QFLAG, DETLI:UNCRT)%>%
-  mutate(DETLI = DETLI/1000, Value = Value/1000)%>%
-  rename(DETLI.mgperkg = DETLI, Value.mgperkg = Value)%>%
+  mutate(DETLI = DETLI/1000, Value = Value/1000)%>% # convert from ug/kg to mg/kg
+  rename(DETLI.mgperkg = DETLI, Value.mgperkg = Value)%>% # add units to column name
   droplevels()
 
-#ices_mytilus.edulis_cd.pb.hg.cu$DATE <- as.Date(ices_mytilus.edulis_cd.pb.hg.cu$DATE, format = "%d/%m/%Y")
+# rename metals to more traditional names
+ices_mytilus.edulis_cd.pb.hg.cu$PARAM <- gsub("CD", "Cd", ices_mytilus.edulis_cd.pb.hg.cu$PARAM)
+ices_mytilus.edulis_cd.pb.hg.cu$PARAM <- gsub("CU", "Cu", ices_mytilus.edulis_cd.pb.hg.cu$PARAM)
+ices_mytilus.edulis_cd.pb.hg.cu$PARAM <- gsub("HG", "Hg", ices_mytilus.edulis_cd.pb.hg.cu$PARAM)
+ices_mytilus.edulis_cd.pb.hg.cu$PARAM <- gsub("PB", "Pb", ices_mytilus.edulis_cd.pb.hg.cu$PARAM)
+table(ices_mytilus.edulis_cd.pb.hg.cu$PARAM)
+
 ```
 
 ## export processed data

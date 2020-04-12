@@ -1,0 +1,61 @@
+---
+title: "Analysis"
+author: "Sena McCrory"
+date: "4/10/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+## Setup
+```{r}
+getwd()
+library(tidyverse)
+library(viridis)
+library(sf)
+library(scales)
+library(nationalparkcolors)
+
+mytilus.metals <- read.csv("./Data/Processed/ICES_Mytilusedulis_Cd_Pb_Hg_Cu.csv")
+mytilus.metals$DATE <- as.Date(mytilus.metals$DATE, format = "%d/%m/%Y")
+
+# create separate datasets for each contaminant
+mytilus.pb <- mytilus.metals %>%
+   filter(PARAM == "Pb")%>%
+   droplevels()
+mytilus.cd <- mytilus.metals %>%
+   filter(PARAM == "Cd")%>%
+   droplevels()
+mytilus.cu <- mytilus.metals %>%
+   filter(PARAM == "Cu")%>%
+   droplevels()
+mytilus.hg <- mytilus.metals %>%
+   filter(PARAM == "Hg")%>%
+   droplevels()
+
+
+my.theme <- theme_minimal(base_size = 14)+
+  theme(legend.position = "top")
+theme_set(my.theme)
+my.colors <- park_palette("CraterLake")[c(1,2,5,7)]
+```
+
+## ANCOVA to predict concentration based on year, metal, country
+```{r}
+ancova.allmetals <- lm(Value.mgperkg ~ MYEAR + PARAM + Country, data = mytilus.metals)
+summary(ancova.allmetals)
+
+ancova.Pb <- lm(Value.mgperkg ~ MYEAR + Country, data = mytilus.pb)
+summary(ancova.Pb)
+
+ancova.Pb <- lm(Value.mgperkg ~ MYEAR + Country, data = mytilus.pb)
+summary(ancova.Pb)
+```
+
+## time series analysis
+```{r}
+
+
+```
+
