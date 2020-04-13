@@ -31,6 +31,7 @@ Global Self-consistent Hierarchical High-resolution Geography (GSHHG) coastline 
 
 * Code: contains all data processing and analysis code
 * Data: contains folders for metadata, raw data (tables only), processed data, and spatial data.
+* Resources: contains publications and reference materials related to the analysis
 * Output: contains any saved figures, tables, created durign analysis, as well as the final report in Rmarkdown format. 
 
 File types used in this repository include Rmarkdown documents, .csv, .pdf, and spatial data are stored as ESRI shapefiles, .shp. 
