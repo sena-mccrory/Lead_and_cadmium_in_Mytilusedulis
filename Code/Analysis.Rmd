@@ -17,18 +17,20 @@ library(sf)
 library(scales)
 library(nationalparkcolors)
 library(trend)
+library(nlme)
+library(piecewiseSEM)
 
 mytilus.metals <- read.csv("./Data/Processed/ICES_Mytilusedulis_Cd_Pb_Hg_Cu.csv")
 mytilus.metals$DATE <- as.Date(mytilus.metals$DATE, format = "%d/%m/%Y")
 
-# create separate datasets for lead and cadmium
+# create separate datasets for lead and cadmium, and filter for just post 1990
 mytilus.pb <- mytilus.metals %>%
-   filter(PARAM == "Pb")%>%
+   filter(PARAM == "Pb" & MYEAR >= 1990)%>%
    droplevels()
 mytilus.cd <- mytilus.metals %>%
-   filter(PARAM == "Cd")%>%
+   filter(PARAM == "Cd"& MYEAR >= 1990)%>%
    droplevels()
-
+mytilus.cd.pb <- rbind(mytilus.cd, mytilus.pb)
 
 my.theme <- theme_minimal(base_size = 14)+
   theme(legend.position = "top")
@@ -48,6 +50,7 @@ cd.pb.monthly.combined <- rbind(cd.monthly_post1990.interp, pb.monthly_post1990.
 
 obvious decrease pre 1990, what about 1990 - 2018?
 ```{r}
+# time series trend analysis by month
 # cd
 cd.monthly.ts <- ts(cd.monthly_post1990.interp$Conc,
                     frequency = 12,
@@ -55,7 +58,7 @@ cd.monthly.ts <- ts(cd.monthly_post1990.interp$Conc,
                     end = c(2018,12,1))
 cd.monthly.ts_trend <- smk.test(cd.monthly.ts)
 cd.monthly.ts_trend
-summary(cd.monthly.ts_trend)
+summary(cd.monthly.ts_trend) # starts on 1990 Feb, so month 1 is Feb
 sea.sens.slope(cd.monthly.ts)
 
 #pb
@@ -68,6 +71,16 @@ pb.monthly.ts_trend
 summary(pb.monthly.ts_trend)
 sea.sens.slope(pb.monthly.ts)
 
+#heirarchical model - with all sample data post 1990, Country as random effect
+cd.changeovertime.mixed <- lme(data = mytilus.pb,
+                               log(Value.mgperkg+1) ~ MYEAR,random = ~1|Country)
+summary(cd.changeovertime.mixed)
+rsquared(cd.changeovertime.mixed)
+cd.changeovertime.fixed <- gls(data = mytilus.pb,
+                               log(Value.mgperkg+1) ~ MYEAR)
+summary(cd.changeovertime.fixed)
+anova(cd.changeovertime.mixed, cd.changeovertime.fixed) # mixed is beter
+
 # plot 
 ggplot(cd.pb.monthly.combined, aes(x = as.Date(Month.Year), y = Conc, color = Metal))+
    scale_color_manual(values = my.colors)+
@@ -77,21 +90,74 @@ ggplot(cd.pb.monthly.combined, aes(x = as.Date(Month.Year), y = Conc, color = Me
    facet_wrap(~Metal, nrow = 2, scales = "free_y")+
    theme(legend.position = "none")+
    labs(x= "Date", y = "Conc of metal (mg/kg wet wt)")
+
+monthly.cd.plot <- ggplot(cd.monthly_post1990.interp, aes(x = as.Date(Month.Year), y = Conc))+
+   geom_line(color = my.colors[2])+
+   geom_point(aes(shape = as.factor(estimated)), color = my.colors[2])+
+   scale_shape_manual(values = c(16,1))+
+   coord_cartesian(ylim=c(0, 10))+
+   theme(legend.position = "none")+
+   labs(x= "Date", y = "Conc of metal (mg/kg wet wt)")
+monthly.pb.plot <- ggplot(pb.monthly_post1990.interp, aes(x = as.Date(Month.Year), y = Conc))+
+   geom_line(color = my.colors[2])+
+   geom_point(aes(shape = as.factor(estimated)), color = my.colors[2])+
+   scale_shape_manual(values = c(16,1))+
+   coord_cartesian(ylim=c(0, 10))+
+   theme(legend.position = "none")+
+   labs(x= "Date", y = "Conc of metal (mg/kg wet wt)")
+
 ```
 
 
 ## do concentrations differ by country?
 ```{r}
+country.order.cd <- mytilus.cd %>%
+   group_by(Country)%>%
+   tally(sort = T, name = "n_bycountry")
 
-ancova.cd <- lm(Value.mgperkg ~ MYEAR + Country + Longitude + Latitude, data = mytilus.cd)
+country.order.pb <- mytilus.pb%>%
+   group_by(Country)%>%
+   tally(sort = T, name = "n_bycountry")
+# exclude countries with less than 100 samples
+
+# add sample number by country to each df
+mytilus.cd <- left_join(mytilus.cd, country.order.cd, by = "Country")
+mytilus.pb <- left_join(mytilus.pb, country.order.pb, by = "Country")
+mytilus.cd$Country <- reorder(mytilus.cd$Country, mytilus.cd$n_bycountry)
+mytilus.pb$Country <- reorder(mytilus.pb$Country, mytilus.pb$n_bycountry)
+summary(mytilus.cd$Country)
+
+# filter to remove countries with fewer than 100 samples over the study period
+cd.countries <- mytilus.cd %>%
+   filter(n_bycountry > 100)%>%
+   droplevels()
+pb.countries <- mytilus.pb %>%
+   filter(n_bycountry > 100)%>%
+   droplevels()
+
+# plot over time
+ggplot(cd.countries %>% arrange(-n_bycountry), 
+       aes(x= as.Date(DATE), y = Value.mgperkg, color = Country))+
+   geom_point(position = position_dodge(), alpha = .7)+
+   scale_color_viridis_d(end = .9, option = "inferno")+
+   ylim(0,10)+
+   geom_smooth(method = "lm", se = F)
+
+ggplot(pb.countries %>% arrange(-n_bycountry), aes(x= as.Date(DATE), y = Value.mgperkg, color = Country))+
+   geom_point(position = position_dodge(), alpha = .7)+
+   scale_color_viridis_d(end = .9, option = "viridis")+
+   geom_smooth(method = "lm", se = F)+
+   coord_cartesian(ylim = c(0,20))
+
+
+ancova.cd <- lm(log(Value.mgperkg+1) ~ MYEAR + Country * Longitude + Latitude, 
+                data = cd.countries)
 summary(ancova.cd)
 
-ancova.pb <- lm(Value.mgperkg ~ MYEAR + Country+ Longitude + Latitude, data = mytilus.pb)
-summary(ancova.pb)
-```
 
-## time series analysis
-```{r}
+ancova.pb <- lm(log(Value.mgperkg+1) ~ MYEAR + Country * Longitude + Latitude, data = pb.countries)
+summary(ancova.pb)
+
 
 
 ```

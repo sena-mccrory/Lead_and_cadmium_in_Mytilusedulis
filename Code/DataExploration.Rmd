@@ -44,49 +44,10 @@ my.theme <- theme_minimal(base_size = 14)+
 theme_set(my.theme)
 my.colors <- park_palette("CraterLake")[c(1,2,5,7)]
 
-```
-
-## distribution of data
-
-FAO Codex Alimentarius Maximum Level for metals in mussels (bivalves)
-Cadmium: 2 mg/kg
-lead does not have FAO Maximum Level established
-
-```{r}
-# create dataset with out major outliers for display purposed only
+# create dataset with out major outliers for display purposes only
 mytilus.metals.rmoutliers <- mytilus.metals%>%
           filter((PARAM == "Cd" & Value.mgperkg < 30)| 
                     PARAM =="Pb")
-   
-
-# points over time
-ggplot(mytilus.metals.rmoutliers, aes(x=as.Date(DATE), y = Value.mgperkg))+
-   geom_point(aes(color = PARAM), alpha = .5)+
-   scale_color_manual(values = my.colors)+
-   #scale_y_log10(labels = trans_format("log10", math_format(10^.x)))+
-   labs(x= "Date", y = "Log Concentration (mg/kg wet wt)", color = "Metal")+
-   facet_wrap(~PARAM, scales = "free_y", ncol = 1)
-
-
-#few samples for finland, latvia, lithuania
-
-#histogram
-ggplot(mytilus.metals.rmoutliers, aes(x=Value.mgperkg, fill = PARAM))+
-   geom_histogram(bins = 40)+
-   scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
-   scale_fill_manual(values = my.colors)+
-   facet_wrap(~PARAM, scales = "fixed")+
-   labs(x="Log Concentration (mg/kg wet wt)", y = "Count", fill = "Metal")
-#log transform conc
-```
-
-## visualization for time series analysis
-```{r}
-ggplot(mytilus.metals.rmoutliers, aes(x=MYEAR, y=1))+
-   geom_point()+
-   facet_wrap(~PARAM)
-summary(mytilus.metals$MYEAR)
-# looks like there is data for all four metals for all years between 1979 and 2018
 
 # aggregate by year
 mytilus.cd.yearly <- mytilus.cd %>%
@@ -101,6 +62,50 @@ mytilus.pb.yearly$Metal <- "Pb"
 
 yearly.data <- rbind(mytilus.cd.yearly, mytilus.pb.yearly)
 
+# aggregate by month
+mytilus.pb.monthly <- mytilus.pb%>%
+   mutate(Month = format.Date(DATE, format = "%m"))%>%
+   group_by(MYEAR,Month)%>%
+   dplyr::summarise(Conc = median(Value.mgperkg))%>%
+   mutate(Month.Year = paste(MYEAR,Month,"01",sep = ""))
+mytilus.pb.monthly$Month.Year <- as.Date(mytilus.pb.monthly$Month.Year, format = "%Y%m%d", origin = "1970-01-01")
+```
+
+## distribution of data
+
+FAO Codex Alimentarius Maximum Level for metals in mussels (bivalves)
+Cadmium: 2 mg/kg
+lead does not have FAO Maximum Level established
+
+```{r}
+# points over time
+ggplot(mytilus.metals.rmoutliers, aes(x=as.Date(DATE), y = Value.mgperkg))+
+   geom_point(aes(color = PARAM), alpha = .5)+
+   scale_color_manual(values = my.colors)+
+   #scale_y_log10(labels = trans_format("log10", math_format(10^.x)))+
+   labs(x= "Date", y = "Log Concentration (mg/kg wet wt)", color = "Metal")+
+   facet_wrap(~PARAM, scales = "free_y", ncol = 1)
+
+#histogram
+ggplot(mytilus.metals.rmoutliers, aes(x=Value.mgperkg, fill = PARAM))+
+   geom_histogram(bins = 40)+
+   scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+   scale_fill_manual(values = my.colors)+
+   facet_wrap(~PARAM, scales = "fixed")+
+   labs(x="Log Concentration (mg/kg wet wt)", y = "Count", fill = "Metal")
+#log transform conc
+```
+
+## visualization for time series analysis
+```{r}
+# all data points
+ggplot(mytilus.metals.rmoutliers, aes(x=MYEAR, y=1))+
+   geom_point()+
+   facet_wrap(~PARAM)
+summary(mytilus.metals$MYEAR)
+# looks like there is data for all four metals for all years between 1979 and 2018
+
+# yearly plot
 ggplot(yearly.data, aes(x=MYEAR, y = Conc, color = Metal))+
    geom_line(size = .8)+
    geom_point()+
@@ -110,25 +115,21 @@ ggplot(yearly.data, aes(x=MYEAR, y = Conc, color = Metal))+
    theme(legend.position = "none")+
    labs(x = "Year", y = "Conc of metal (mg/kg wet wt)")
 
-
-# aggregate by month
-mytilus.pb.monthly <- mytilus.pb%>%
-   mutate(Month = format.Date(DATE, format = "%m"))%>%
-   group_by(MYEAR,Month)%>%
-   dplyr::summarise(Conc = median(Value.mgperkg))%>%
-   mutate(Month.Year = paste(MYEAR,Month,"01",sep = ""))
-mytilus.pb.monthly$Month.Year <- as.Date(mytilus.pb.monthly$Month.Year, format = "%Y%m%d", origin = "1970-01-01")
+# monthly plot
 ggplot(mytilus.pb.monthly, aes(x=as.Date(Month.Year), y = 1))+
    geom_point(color = my.colors[2], size = 1)
 #looks like there are many months missing for sampling to use monthly data, especially before 1990
+```
 
+### setup for monthly interpolation
+```{r}
 # subset and interpolate for after 1990
 mytilus.pb.monthly_post1990 <- mytilus.pb.monthly%>%
    filter(MYEAR >= 1990)
 dim(mytilus.pb.monthly_post1990)
 summary(mytilus.pb.monthly_post1990$MYEAR)
 12*(2018-1990)-231
-105/336 # about 1/3 of the sampling month are missing post 1990...so interpolation is not recommended
+105/336 # about 1/3 of the sampling month are missing post 1990...is that okay to interp?
 
 mytilus.cd.monthly <- mytilus.cd %>%
    mutate(Month = format.Date(DATE, format = "%m"))%>%
@@ -136,9 +137,12 @@ mytilus.cd.monthly <- mytilus.cd %>%
    dplyr::summarise(Conc = median(Value.mgperkg))%>%
    mutate(Month.Year = paste(MYEAR,Month,"01",sep = ""))
 mytilus.cd.monthly$Month.Year <- as.Date(mytilus.cd.monthly$Month.Year, format = "%Y%m%d", origin = "1970-01-01")
+
+
 ggplot(mytilus.cd.monthly, aes(x=as.Date(Month.Year), y = 1))+
    geom_point(color = my.colors[1], size = 1)+
    ylim(0,3)
+
 mytilus.cd.monthly_post1990 <- mytilus.cd.monthly%>%
    filter(MYEAR >= 1990)
 dim(mytilus.cd.monthly_post1990) # still have ~ 1/3 of months missing
@@ -147,13 +151,14 @@ dim(mytilus.cd.monthly_post1990) # still have ~ 1/3 of months missing
 
 interpolation for monthly time series analysis
 ```{r}
-# create monthly data set, left join, spline interpolation to fill NAs
-Months <- as.data.frame(seq(as.Date("1990-01-01"),as.Date("2018-12-01"), "month"))
+# monthly dataset to join
+Months <- as.data.frame(seq(as.Date("1990-02-01"),as.Date("2018-12-01"), "month"))
 colnames(Months)
 Months <- Months %>%
-rename(Month.Year = 'seq(as.Date(\"1990-01-01\"), as.Date(\"2018-12-01\"), \"month\")')
+rename(Month.Year = 'seq(as.Date(\"1990-02-01\"), as.Date(\"2018-12-01\"), \"month\")')
 class(Months$Month.Year)
 
+# spline interp
 # cd
 mytilus.cd.monthly_post1990.interp <- left_join(Months,mytilus.cd.monthly_post1990, by = "Month.Year")
 mytilus.cd.monthly_post1990.interp$estimated <- ifelse(is.na(mytilus.cd.monthly_post1990.interp$Conc), 1, 0)
@@ -168,10 +173,25 @@ mytilus.pb.monthly_post1990.interp <- mytilus.pb.monthly_post1990.interp%>%
 mytilus.pb.monthly_post1990.interp$Conc <- na.spline(mytilus.pb.monthly_post1990.interp$Conc)
 
 
+# linear interp na.approx
+# cd
+mytilus.cd.monthly_post1990.interp2 <- left_join(Months,mytilus.cd.monthly_post1990, by = "Month.Year")
+mytilus.cd.monthly_post1990.interp2$estimated <- ifelse(is.na(mytilus.cd.monthly_post1990.interp2$Conc), 1, 0)
+mytilus.cd.monthly_post1990.interp2 <- mytilus.cd.monthly_post1990.interp2%>%
+   select(Month.Year, Conc, estimated)
+mytilus.cd.monthly_post1990.interp2$Conc <- na.approx(mytilus.cd.monthly_post1990.interp2$Conc)
+# pb
+mytilus.pb.monthly_post1990.interp2 <- left_join(Months,mytilus.pb.monthly_post1990, by = "Month.Year")
+mytilus.pb.monthly_post1990.interp2$estimated <- ifelse(is.na(mytilus.pb.monthly_post1990.interp2$Conc), 1, 0)
+mytilus.pb.monthly_post1990.interp2 <- mytilus.pb.monthly_post1990.interp2%>%
+   select(Month.Year, Conc, estimated)
+mytilus.pb.monthly_post1990.interp2$Conc <- na.approx(mytilus.pb.monthly_post1990.interp2$Conc)
+
+
 
 # write csvs of interpolated data
-write.csv(mytilus.cd.monthly_post1990.interp, "./Data/Processed/cd_monthly_post1990_interp.csv", row.names = FALSE)
-write.csv(mytilus.pb.monthly_post1990.interp, "./Data/Processed/pb_monthly_post1990_interp.csv", row.names = FALSE)
+write.csv(mytilus.cd.monthly_post1990.interp2, "./Data/Processed/cd_monthly_post1990_interp.csv", row.names = FALSE)
+write.csv(mytilus.pb.monthly_post1990.interp2, "./Data/Processed/pb_monthly_post1990_interp.csv", row.names = FALSE)
 ```
 seem to be a lot more weird stuff going on before 1990, 
 fewer samples? 
