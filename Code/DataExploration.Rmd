@@ -17,6 +17,8 @@ library(scales)
 library(nationalparkcolors)
 library(lubridate)
 library(cowplot)
+library(trend)
+library(zoo)
 
 mytilus.allmetals <- read.csv("./Data/Processed/ICES_Mytilusedulis_Cd_Pb_Hg_Cu.csv")
 mytilus.metals$DATE <- as.Date(mytilus.metals$DATE, format = "%d/%m/%Y")
@@ -90,16 +92,24 @@ summary(mytilus.metals$MYEAR)
 mytilus.cd.yearly <- mytilus.cd %>%
    group_by(MYEAR)%>%
    dplyr::summarise(Conc = median(Value.mgperkg))
-cd.yearly <- ggplot(mytilus.cd.yearly, aes(x=MYEAR, y = Conc))+
-   geom_line(color = my.colors[1], size = 1)
+mytilus.cd.yearly$Metal <- "Cd"
 
 mytilus.pb.yearly <- mytilus.pb %>%
    group_by(MYEAR)%>%
    dplyr::summarise(Conc = median(Value.mgperkg))
-pb.yearly <-ggplot(mytilus.pb.yearly, aes(x=MYEAR, y = Conc))+
-   geom_line(color = my.colors[4], size = 1)
+mytilus.pb.yearly$Metal <- "Pb"
 
-plot_grid(cd.yearly, pb.yearly, align = "v", nrow = 2)
+yearly.data <- rbind(mytilus.cd.yearly, mytilus.pb.yearly)
+
+ggplot(yearly.data, aes(x=MYEAR, y = Conc, color = Metal))+
+   geom_line(size = .8)+
+   geom_point()+
+   scale_color_manual(values = my.colors)+
+   ylim(0,1)+
+   facet_wrap(~Metal, nrow = 2, scales = "fixed")+
+   theme(legend.position = "none")+
+   labs(x = "Year", y = "Conc of metal (mg/kg wet wt)")
+
 
 # aggregate by month
 mytilus.pb.monthly <- mytilus.pb%>%
@@ -108,11 +118,17 @@ mytilus.pb.monthly <- mytilus.pb%>%
    dplyr::summarise(Conc = median(Value.mgperkg))%>%
    mutate(Month.Year = paste(MYEAR,Month,"01",sep = ""))
 mytilus.pb.monthly$Month.Year <- as.Date(mytilus.pb.monthly$Month.Year, format = "%Y%m%d", origin = "1970-01-01")
-ggplot(mytilus.pb.monthly, aes(x=as.Date(Month.Year), y = Conc))+
-   geom_point(color = my.colors[4], size = 1)+
-   ylim(0,4)
-#looks like there are too many months missing before 1990 to use monthly data, stick to yearly averages, or perhaps seasons?
-# or maybe just look at post 1990?
+ggplot(mytilus.pb.monthly, aes(x=as.Date(Month.Year), y = 1))+
+   geom_point(color = my.colors[2], size = 1)
+#looks like there are many months missing for sampling to use monthly data, especially before 1990
+
+# subset and interpolate for after 1990
+mytilus.pb.monthly_post1990 <- mytilus.pb.monthly%>%
+   filter(MYEAR >= 1990)
+dim(mytilus.pb.monthly_post1990)
+summary(mytilus.pb.monthly_post1990$MYEAR)
+12*(2018-1990)-231
+105/336 # about 1/3 of the sampling month are missing post 1990...so interpolation is not recommended
 
 mytilus.cd.monthly <- mytilus.cd %>%
    mutate(Month = format.Date(DATE, format = "%m"))%>%
@@ -121,11 +137,42 @@ mytilus.cd.monthly <- mytilus.cd %>%
    mutate(Month.Year = paste(MYEAR,Month,"01",sep = ""))
 mytilus.cd.monthly$Month.Year <- as.Date(mytilus.cd.monthly$Month.Year, format = "%Y%m%d", origin = "1970-01-01")
 ggplot(mytilus.cd.monthly, aes(x=as.Date(Month.Year), y = 1))+
-   geom_point(color = my.colors[4], size = 1)+
+   geom_point(color = my.colors[1], size = 1)+
    ylim(0,3)
+mytilus.cd.monthly_post1990 <- mytilus.cd.monthly%>%
+   filter(MYEAR >= 1990)
+dim(mytilus.cd.monthly_post1990) # still have ~ 1/3 of months missing
+
+```
+
+interpolation for monthly time series analysis
+```{r}
+# create monthly data set, left join, spline interpolation to fill NAs
+Months <- as.data.frame(seq(as.Date("1990-02-01"),as.Date("2018-12-01"), "month"))
+colnames(Months)
+Months <- Months %>%
+rename(Month.Year = 'seq(as.Date(\"1990-02-01\"), as.Date(\"2018-12-01\"), \"month\")')
+class(Months$Month.Year)
+
+# cd
+mytilus.cd.monthly_post1990.interp <- left_join(Months,mytilus.cd.monthly_post1990, by = "Month.Year")
+mytilus.cd.monthly_post1990.interp <- mytilus.cd.monthly_post1990.interp%>%
+   select(Month.Year, Conc)
+mytilus.cd.monthly_post1990.interp$Conc <- na.spline(mytilus.cd.monthly_post1990.interp$Conc)
+# pb
+mytilus.pb.monthly_post1990.interp <- left_join(Months,mytilus.pb.monthly_post1990, by = "Month.Year")
+mytilus.pb.monthly_post1990.interp <- mytilus.pb.monthly_post1990.interp%>%
+   select(Month.Year, Conc)
+mytilus.pb.monthly_post1990.interp$Conc <- na.spline(mytilus.pb.monthly_post1990.interp$Conc)
+
+
+
+# write csvs of interpolated data
+write.csv(mytilus.cd.monthly_post1990.interp, "./Data/Processed/cd_monthly_post1990_interp.csv", row.names = FALSE)
+write.csv(mytilus.pb.monthly_post1990.interp, "./Data/Processed/pb_monthly_post1990_interp.csv", row.names = FALSE)
 ```
 seem to be a lot more weird stuff going on before 1990, 
-fewer samples? more noise?
+fewer samples? 
 
 might be interesting to restrict the analysis to just post 1990? there is obviously a big decrease in pre 1990, but has the trend continued?
 

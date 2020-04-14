@@ -16,22 +16,17 @@ library(viridis)
 library(sf)
 library(scales)
 library(nationalparkcolors)
+library(trend)
 
 mytilus.metals <- read.csv("./Data/Processed/ICES_Mytilusedulis_Cd_Pb_Hg_Cu.csv")
 mytilus.metals$DATE <- as.Date(mytilus.metals$DATE, format = "%d/%m/%Y")
 
-# create separate datasets for each contaminant
+# create separate datasets for lead and cadmium
 mytilus.pb <- mytilus.metals %>%
    filter(PARAM == "Pb")%>%
    droplevels()
 mytilus.cd <- mytilus.metals %>%
    filter(PARAM == "Cd")%>%
-   droplevels()
-mytilus.cu <- mytilus.metals %>%
-   filter(PARAM == "Cu")%>%
-   droplevels()
-mytilus.hg <- mytilus.metals %>%
-   filter(PARAM == "Hg")%>%
    droplevels()
 
 
@@ -39,18 +34,24 @@ my.theme <- theme_minimal(base_size = 14)+
   theme(legend.position = "top")
 theme_set(my.theme)
 my.colors <- park_palette("CraterLake")[c(1,2,5,7)]
+
+cd.monthly_post1990.interp
 ```
 
-## ANCOVA to predict concentration based on year, metal, country
+## how have metal concentrations in Mytilus edulis changed over time?
 ```{r}
-ancova.allmetals <- lm(Value.mgperkg ~ MYEAR + PARAM + Country, data = mytilus.metals)
-summary(ancova.allmetals)
 
-ancova.Pb <- lm(Value.mgperkg ~ MYEAR + Country, data = mytilus.pb)
-summary(ancova.Pb)
+```
 
-ancova.Pb <- lm(Value.mgperkg ~ MYEAR + Country, data = mytilus.pb)
-summary(ancova.Pb)
+
+## do concentrations differ by country?
+```{r}
+
+ancova.cd <- lm(Value.mgperkg ~ MYEAR + Country + Longitude + Latitude, data = mytilus.cd)
+summary(ancova.cd)
+
+ancova.pb <- lm(Value.mgperkg ~ MYEAR + Country+ Longitude + Latitude, data = mytilus.pb)
+summary(ancova.pb)
 ```
 
 ## time series analysis
