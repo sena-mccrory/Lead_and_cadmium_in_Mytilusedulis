@@ -35,12 +35,48 @@ my.theme <- theme_minimal(base_size = 14)+
 theme_set(my.theme)
 my.colors <- park_palette("CraterLake")[c(1,2,5,7)]
 
-cd.monthly_post1990.interp
+cd.monthly_post1990.interp <- read.csv("./Data/Processed/cd_monthly_post1990_interp.csv", header = T)
+pb.monthly_post1990.interp <- read.csv("./Data/Processed/pb_monthly_post1990_interp.csv", header = T)
+
+
+cd.monthly_post1990.interp$Metal <- "Cd"
+pb.monthly_post1990.interp$Metal <- "Pb"
+cd.pb.monthly.combined <- rbind(cd.monthly_post1990.interp, pb.monthly_post1990.interp)
 ```
 
 ## how have metal concentrations in Mytilus edulis changed over time?
-```{r}
 
+obvious decrease pre 1990, what about 1990 - 2018?
+```{r}
+# cd
+cd.monthly.ts <- ts(cd.monthly_post1990.interp$Conc,
+                    frequency = 12,
+                    start = c(1990,1,1),
+                    end = c(2018,12,1))
+cd.monthly.ts_trend <- smk.test(cd.monthly.ts)
+cd.monthly.ts_trend
+summary(cd.monthly.ts_trend)
+sea.sens.slope(cd.monthly.ts)
+
+#pb
+pb.monthly.ts <- ts(pb.monthly_post1990.interp$Conc,
+                    frequency = 12,
+                    start = c(1990,1,1),
+                    end = c(2018,12,1))
+pb.monthly.ts_trend <- smk.test(pb.monthly.ts)
+pb.monthly.ts_trend
+summary(pb.monthly.ts_trend)
+sea.sens.slope(pb.monthly.ts)
+
+# plot 
+ggplot(cd.pb.monthly.combined, aes(x = as.Date(Month.Year), y = Conc, color = Metal))+
+   scale_color_manual(values = my.colors)+
+   geom_line()+
+   geom_point(aes(shape = as.factor(estimated)))+
+   scale_shape_manual(values = c(16,1))+
+   facet_wrap(~Metal, nrow = 2, scales = "free_y")+
+   theme(legend.position = "none")+
+   labs(x= "Date", y = "Conc of metal (mg/kg wet wt)")
 ```
 
 
