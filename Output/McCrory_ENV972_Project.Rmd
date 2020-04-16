@@ -28,10 +28,21 @@ getwd()
 library(tidyverse)
 library(scales)
 library(nationalparkcolors)
+library(tidyverse)
+library(viridis)
+library(sf)
+library(scales)
+library(nationalparkcolors)
+library(trend)
 
 # Set your ggplot theme
+my.theme <- theme_minimal(base_size = 14)+
+  theme(legend.position = "top")
+theme_set(my.theme)
+my.colors <- park_palette("CraterLake")[c(1,2,5,7)]
 
 # Load your datasets
+
 
 ```
 

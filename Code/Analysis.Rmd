@@ -81,7 +81,7 @@ cd.changeovertime.fixed <- gls(data = mytilus.pb,
 summary(cd.changeovertime.fixed)
 anova(cd.changeovertime.mixed, cd.changeovertime.fixed) # mixed is beter
 
-# plot 
+# plot of monthly conc - with interpolated points
 ggplot(cd.pb.monthly.combined, aes(x = as.Date(Month.Year), y = Conc, color = Metal))+
    scale_color_manual(values = my.colors)+
    geom_line()+
@@ -91,14 +91,14 @@ ggplot(cd.pb.monthly.combined, aes(x = as.Date(Month.Year), y = Conc, color = Me
    theme(legend.position = "none")+
    labs(x= "Date", y = "Conc of metal (mg/kg wet wt)")
 
-monthly.cd.plot <- ggplot(cd.monthly_post1990.interp, aes(x = as.Date(Month.Year), y = Conc))+
-   geom_line(color = my.colors[2])+
-   geom_point(aes(shape = as.factor(estimated)), color = my.colors[2])+
+ggplot(cd.monthly_post1990.interp, aes(x = as.Date(Month.Year), y = Conc))+
+   geom_line(color = my.colors[1])+
+   geom_point(aes(shape = as.factor(estimated)), color = my.colors[1])+
    scale_shape_manual(values = c(16,1))+
-   coord_cartesian(ylim=c(0, 10))+
+   #coord_cartesian(ylim=c(0, 10))+
    theme(legend.position = "none")+
    labs(x= "Date", y = "Conc of metal (mg/kg wet wt)")
-monthly.pb.plot <- ggplot(pb.monthly_post1990.interp, aes(x = as.Date(Month.Year), y = Conc))+
+ggplot(pb.monthly_post1990.interp, aes(x = as.Date(Month.Year), y = Conc))+
    geom_line(color = my.colors[2])+
    geom_point(aes(shape = as.factor(estimated)), color = my.colors[2])+
    scale_shape_manual(values = c(16,1))+
@@ -150,15 +150,13 @@ ggplot(pb.countries %>% arrange(-n_bycountry), aes(x= as.Date(DATE), y = Value.m
    coord_cartesian(ylim = c(0,20))
 
 
-ancova.cd <- lm(log(Value.mgperkg+1) ~ MYEAR + Country * Longitude + Latitude, 
+ancova.cd <- lm(log(Value.mgperkg+1) ~ MYEAR * Country, 
                 data = cd.countries)
 summary(ancova.cd)
 
 
-ancova.pb <- lm(log(Value.mgperkg+1) ~ MYEAR + Country * Longitude + Latitude, data = pb.countries)
+ancova.pb <- lm(log(Value.mgperkg+1) ~ MYEAR * Country, data = pb.countries)
 summary(ancova.pb)
-
-
 
 ```
 
