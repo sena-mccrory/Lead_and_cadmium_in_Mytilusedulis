@@ -5,8 +5,8 @@ output:
     fig_caption: yes
     number_sections: yes
 geometry: margin=2.54cm
-title: "Insert title of project here"
-subtitle: "Web address for GitHub repository"
+title: "Trends in heavy metal concentrations in *Mytilus edulis* from several European nations"
+subtitle: "https://github.com/slm119/ENV872_FinalProject"
 author: "Sena McCrory"
 fontsize: 12pt
 mainfont: Times New Roman
@@ -82,17 +82,61 @@ my.colors <- park_palette("CraterLake")[c(5,7,1,2)]
 
 The ICES database includes *Mytilus edulis* sample data from 1979 to 2018 for X European countries. Most samples were collected near shorelines and within some enclosed bay or lake areas (Fig 1).
 
-```{r , echo=FALSE, fig.cap="my caption", out.width = '90%'}
-knitr::include_graphics("./Output/StudyRegionMap.png")
-```
-
-
-```{r, echo=FALSE, fig.cap="my caption"}
-
-```
-
 ```{r, echo=FALSE, fig.cap="Yearly median concentrations of cadmium and lead in *Mytilus edulis* ICES monitoring data from 1979 to 2018."}
+# yearly plot
+ggplot(yearly.data, aes(x=MYEAR, y = Conc, color = PARAM))+
+   geom_line(size = .8)+
+   geom_point()+
+   scale_color_manual(values = my.colors)+
+   ylim(0,1)+
+   facet_wrap(~PARAM, nrow = 2, scales = "fixed")+
+   theme(legend.position = "none")+
+   labs(x = "Year", y = "Conc (mg metal/kg wet wt)")
 
+```
+
+
+```{r , echo=FALSE, fig.cap="Sample locations from 1990 to 2018", out.width = '90%'}
+#knitr::include_graphics("./Output/StudyRegionMap.pdf")
+```
+
+
+```{r, echo=FALSE, fig.cap="Concentrations of metals in *Mytilus edulis* over time"}
+# all sample conc 1990 - 2018 - excluding one outlier in Cd for visualiztion purposed
+ggplot(mytilus.post1990 %>%
+          filter((PARAM == "Cd" & Value.mgperkg < 20) | PARAM == "Pb"), aes(x=as.Date(DATE), y = Value.mgperkg))+
+   geom_point(aes(color = PARAM), alpha = .5)+
+   scale_color_manual(values = my.colors)+
+   #scale_y_log10(labels = trans_format("log10", math_format(10^.x)))+
+   labs(x= "Date", y = "Conc (mg metal/kg wet wt)", color = "Metal")+
+   facet_wrap(~PARAM, scales = "free_y", ncol = 1)+
+   theme(legend.position = "none")
+```
+
+
+```{r, echo=FALSE, fig.cap="Concentrations of metals in *Mytilus edulis* by country"}
+# #histogram
+ggplot(mytilus.post1990, aes(x=Value.mgperkg, fill = PARAM))+
+   geom_histogram(bins = 40)+
+   scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+   scale_fill_manual(values = my.colors)+
+   facet_wrap(~PARAM, scales = "fixed")+
+   labs(x="Log Concentration (mg/kg wet wt)", y = "Count", fill = "Metal")+
+   theme(legend.position = "none")
+```
+
+
+```{r, echo=FALSE, fig.cap="Sample count by country"}
+# violin by country
+ggplot(mytilus.post1990, aes(x=Country, y = Value.mgperkg, fill = PARAM))+
+   geom_violin(position = "dodge", scale = "count", draw_quantiles = .5, size = 1)+
+   scale_fill_manual(values = my.colors)+
+   scale_y_log10(labels = trans_format("log10", math_format(10^.x)))+
+   labs(fill = "Metal")+
+   coord_flip()+
+   facet_wrap(~PARAM)+
+   theme(legend.position = "none")+
+   labs(y="Conc (mg/kg wet wt)", x = "")
 ```
 
 

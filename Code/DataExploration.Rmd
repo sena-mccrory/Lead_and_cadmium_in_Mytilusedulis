@@ -52,6 +52,7 @@ mytilus.post1990$Country <- factor(mytilus.post1990$Country, levels =
                                       "Ireland", "Denmark", "The Netherlands",
                                       "Germany", "Spain", "Belgium", "Iceland", 
                                       "Poland", "Lithuania"))
+#mytilus.post1990$Country <- reorder(mytilus.post1990$Country, mytilus.post1990$Value.mgperkg, FUN = median)
 
 # create separate datasets for each contaminant
 mytilus.pb <- mytilus.post1990 %>%
@@ -86,9 +87,10 @@ lead does not have FAO Maximum Level established
 ggplot(mytilus.post1990, aes(x=as.Date(DATE), y = Value.mgperkg))+
    geom_point(aes(color = PARAM), alpha = .5)+
    scale_color_manual(values = my.colors)+
-   #scale_y_log10(labels = trans_format("log10", math_format(10^.x)))+
-   labs(x= "Date", y = "Log Concentration (mg/kg wet wt)", color = "Metal")+
-   facet_wrap(~PARAM, scales = "free_y", ncol = 1)
+   scale_y_log10(labels = trans_format("log10", math_format(10^.x)))+
+   labs(x= "Date", y = "Log Conc (mg metal/kg wet wt)", color = "Metal")+
+   facet_wrap(~PARAM, scales = "free_y", ncol = 1)+
+   theme(legend.position = "none")
 
 #histogram
 ggplot(mytilus.post1990, aes(x=Value.mgperkg, fill = PARAM))+
@@ -133,6 +135,16 @@ ggplot(mytilus.post1990, aes(x=Country, fill = PARAM))+
    scale_fill_manual(values = my.colors)+
    coord_flip()+
    labs(fill = "Metal")
+
+
+# violin
+ggplot(mytilus.post1990, aes(x=Country, y = Value.mgperkg, fill = PARAM))+
+   geom_violin(position = "dodge", scale = "area", draw_quantiles = .5)+
+   scale_fill_manual(values = my.colors)+
+   scale_y_log10(labels = trans_format("log10", math_format(10^.x)))+
+   labs(fill = "Metal")+
+   coord_flip()+
+   facet_wrap(~PARAM)
    
 ```
 
@@ -161,11 +173,11 @@ st_crs(metal_points_wgs84) <- 4326
 
 ```{r}
 
-png("./Output/StudyRegionMap.png", width = 9, height = 5, units = "in", res = 150)
+pdf("./Output/StudyRegionMap.pdf", width = 9, height = 5)
 ggplot()+
   geom_sf(data = coastlines_global_wgs84, fill = "lightgray", color = NA, inherit.aes = FALSE)+
   geom_sf(aes(color = PARAM), data = metal_points_wgs84, inherit.aes = F,
-          size = 2, alpha = 0.5, shape = 16)+ 
+          size = 1.2, alpha = 0.5, shape = 1)+ 
   scale_color_manual(values = my.colors) + 
   coord_sf(xlim=c(-30, 40), ylim = c(38, 72), crs = 4326)+
   labs(color = "Mytilus edulis\nsample locations")+
