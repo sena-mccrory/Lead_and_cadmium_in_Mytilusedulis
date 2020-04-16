@@ -20,8 +20,15 @@ library(trend)
 library(nlme)
 library(piecewiseSEM)
 
-mytilus.metals <- read.csv("./Data/Processed/ICES_Mytilusedulis_Cd_Pb_Hg_Cu.csv")
+mytilus.metals <- read.csv("./Data/Processed/ICES_Mytilusedulis_Cd_Pb.csv")
 mytilus.metals$DATE <- as.Date(mytilus.metals$DATE, format = "%d/%m/%Y")
+
+# theme
+my.theme <- theme_minimal(base_size = 14)+
+  theme(legend.position = "top")
+theme_set(my.theme)
+my.colors <- park_palette("CraterLake")[c(5,7,1,2)]
+
 
 # create separate datasets for lead and cadmium, and filter for just post 1990
 mytilus.pb <- mytilus.metals %>%
@@ -32,18 +39,87 @@ mytilus.cd <- mytilus.metals %>%
    droplevels()
 mytilus.cd.pb <- rbind(mytilus.cd, mytilus.pb)
 
-my.theme <- theme_minimal(base_size = 14)+
-  theme(legend.position = "top")
-theme_set(my.theme)
-my.colors <- park_palette("CraterLake")[c(1,2,5,7)]
+# aggregate by monthly median
+mytilus.pb.monthly_post1990 <- mytilus.pb%>%
+   mutate(Month = format.Date(DATE, format = "%m"))%>%
+   group_by(MYEAR,Month)%>%
+   dplyr::summarise(Conc = median(Value.mgperkg))%>%
+   mutate(Month.Year = paste(MYEAR,Month,"01",sep = ""))
+mytilus.pb.monthly_post1990$Month.Year <- as.Date(mytilus.pb.monthly_post1990$Month.Year, format = "%Y%m%d", origin = "1970-01-01")
 
-cd.monthly_post1990.interp <- read.csv("./Data/Processed/cd_monthly_post1990_interp.csv", header = T)
-pb.monthly_post1990.interp <- read.csv("./Data/Processed/pb_monthly_post1990_interp.csv", header = T)
+mytilus.cd.monthly_post1990 <- mytilus.cd%>%
+   mutate(Month = format.Date(DATE, format = "%m"))%>%
+   group_by(MYEAR,Month)%>%
+   dplyr::summarise(Conc = median(Value.mgperkg))%>%
+   mutate(Month.Year = paste(MYEAR,Month,"01",sep = ""))
+mytilus.cd.monthly_post1990$Month.Year <- as.Date(mytilus.cd.monthly_post1990$Month.Year, format = "%Y%m%d", origin = "1970-01-01")
+```
+
+# monthly interpolation
+
+```{r}
+# subset and interpolate for after 1990
+dim(mytilus.pb.monthly_post1990)
+summary(mytilus.pb.monthly_post1990$MYEAR)
+12*(2018-1990)-231
+105/336 # about 1/3 of the sampling month are missing post 1990...is that okay to interp?
+
+dim(mytilus.cd.monthly_post1990) # still have ~ 1/3 of months missing
+
+```
+
+interpolation for monthly time series analysis
+```{r}
+# monthly dataset to join
+Months <- as.data.frame(seq(as.Date("1990-02-01"),as.Date("2018-12-01"), "month"))
+colnames(Months)
+Months <- Months %>%
+rename(Month.Year = 'seq(as.Date(\"1990-02-01\"), as.Date(\"2018-12-01\"), \"month\")')
+class(Months$Month.Year)
+
+# spline interp - results in values < 0... not good
+# cd
+mytilus.cd.monthly_post1990.interp <- left_join(Months,mytilus.cd.monthly_post1990, by = "Month.Year")
+mytilus.cd.monthly_post1990.interp$estimated <- ifelse(is.na(mytilus.cd.monthly_post1990.interp$Conc), 1, 0)
+mytilus.cd.monthly_post1990.interp <- mytilus.cd.monthly_post1990.interp%>%
+   select(Month.Year, Conc, estimated)
+mytilus.cd.monthly_post1990.interp$Conc <- na.spline(mytilus.cd.monthly_post1990.interp$Conc)
+# pb
+mytilus.pb.monthly_post1990.interp <- left_join(Months,mytilus.pb.monthly_post1990, by = "Month.Year")
+mytilus.pb.monthly_post1990.interp$estimated <- ifelse(is.na(mytilus.pb.monthly_post1990.interp$Conc), 1, 0)
+mytilus.pb.monthly_post1990.interp <- mytilus.pb.monthly_post1990.interp%>%
+   select(Month.Year, Conc, estimated)
+mytilus.pb.monthly_post1990.interp$Conc <- na.spline(mytilus.pb.monthly_post1990.interp$Conc)
 
 
-cd.monthly_post1990.interp$Metal <- "Cd"
-pb.monthly_post1990.interp$Metal <- "Pb"
-cd.pb.monthly.combined <- rbind(cd.monthly_post1990.interp, pb.monthly_post1990.interp)
+# linear interp na.approx...better
+# cd
+mytilus.cd.monthly_post1990.interp2 <- left_join(Months,mytilus.cd.monthly_post1990, by = "Month.Year")
+mytilus.cd.monthly_post1990.interp2$estimated <- ifelse(is.na(mytilus.cd.monthly_post1990.interp2$Conc), 1, 0)
+mytilus.cd.monthly_post1990.interp2 <- mytilus.cd.monthly_post1990.interp2%>%
+   select(Month.Year, Conc, estimated)
+mytilus.cd.monthly_post1990.interp2$Conc <- na.approx(mytilus.cd.monthly_post1990.interp2$Conc)
+# pb
+mytilus.pb.monthly_post1990.interp2 <- left_join(Months,mytilus.pb.monthly_post1990, by = "Month.Year")
+mytilus.pb.monthly_post1990.interp2$estimated <- ifelse(is.na(mytilus.pb.monthly_post1990.interp2$Conc), 1, 0)
+mytilus.pb.monthly_post1990.interp2 <- mytilus.pb.monthly_post1990.interp2%>%
+   select(Month.Year, Conc, estimated)
+mytilus.pb.monthly_post1990.interp2$Conc <- na.approx(mytilus.pb.monthly_post1990.interp2$Conc)
+
+mytilus.cd.monthly_post1990.interp2$PARAM <- "Cd"
+mytilus.pb.monthly_post1990.interp2$PARAM <- "Pb"
+
+cd.pb.monthly.combined <- rbind(mytilus.cd.monthly_post1990.interp2, mytilus.pb.monthly_post1990.interp2)
+```
+
+```{r}
+# write csvs of interpolated data
+write.csv(mytilus.cd.monthly_post1990.interp2, "./Data/Processed/cd_monthly_post1990_interp.csv", row.names = FALSE)
+write.csv(mytilus.pb.monthly_post1990.interp2, "./Data/Processed/pb_monthly_post1990_interp.csv", row.names = FALSE)
+
+#seem to be a lot more weird stuff going on before 1990, fewer samples? 
+
+#might be interesting to restrict the analysis to just post 1990? there is obviously a big decrease in pre 1990, but has the trend continued?
 ```
 
 ## how have metal concentrations in Mytilus edulis changed over time?
@@ -52,7 +128,7 @@ obvious decrease pre 1990, what about 1990 - 2018?
 ```{r}
 # time series trend analysis by month
 # cd
-cd.monthly.ts <- ts(cd.monthly_post1990.interp$Conc,
+cd.monthly.ts <- ts(mytilus.cd.monthly_post1990.interp2$Conc,
                     frequency = 12,
                     start = c(1990,1,1),
                     end = c(2018,12,1))
@@ -62,7 +138,7 @@ summary(cd.monthly.ts_trend) # starts on 1990 Feb, so month 1 is Feb
 sea.sens.slope(cd.monthly.ts)
 
 #pb
-pb.monthly.ts <- ts(pb.monthly_post1990.interp$Conc,
+pb.monthly.ts <- ts(mytilus.pb.monthly_post1990.interp2$Conc,
                     frequency = 12,
                     start = c(1990,1,1),
                     end = c(2018,12,1))
@@ -82,23 +158,23 @@ summary(cd.changeovertime.fixed)
 anova(cd.changeovertime.mixed, cd.changeovertime.fixed) # mixed is beter
 
 # plot of monthly conc - with interpolated points
-ggplot(cd.pb.monthly.combined, aes(x = as.Date(Month.Year), y = Conc, color = Metal))+
+ggplot(cd.pb.monthly.combined, aes(x = as.Date(Month.Year), y = Conc, color = PARAM))+
    scale_color_manual(values = my.colors)+
    geom_line()+
    geom_point(aes(shape = as.factor(estimated)))+
    scale_shape_manual(values = c(16,1))+
-   facet_wrap(~Metal, nrow = 2, scales = "free_y")+
+   facet_wrap(~PARAM, nrow = 2, scales = "free_y")+
    theme(legend.position = "none")+
    labs(x= "Date", y = "Conc of metal (mg/kg wet wt)")
 
-ggplot(cd.monthly_post1990.interp, aes(x = as.Date(Month.Year), y = Conc))+
+ggplot(mytilus.cd.monthly_post1990.interp, aes(x = as.Date(Month.Year), y = Conc))+
    geom_line(color = my.colors[1])+
    geom_point(aes(shape = as.factor(estimated)), color = my.colors[1])+
    scale_shape_manual(values = c(16,1))+
    #coord_cartesian(ylim=c(0, 10))+
    theme(legend.position = "none")+
    labs(x= "Date", y = "Conc of metal (mg/kg wet wt)")
-ggplot(pb.monthly_post1990.interp, aes(x = as.Date(Month.Year), y = Conc))+
+ggplot(mytilus.pb.monthly_post1990.interp, aes(x = as.Date(Month.Year), y = Conc))+
    geom_line(color = my.colors[2])+
    geom_point(aes(shape = as.factor(estimated)), color = my.colors[2])+
    scale_shape_manual(values = c(16,1))+
@@ -139,13 +215,13 @@ pb.countries <- mytilus.pb %>%
 ggplot(cd.countries %>% arrange(-n_bycountry), 
        aes(x= as.Date(DATE), y = Value.mgperkg, color = Country))+
    geom_point(position = position_dodge(), alpha = .7)+
-   scale_color_viridis_d(end = .9, option = "inferno")+
+   scale_color_viridis_d(end = .9, option = "viridis")+
    ylim(0,10)+
    geom_smooth(method = "lm", se = F)
 
 ggplot(pb.countries %>% arrange(-n_bycountry), aes(x= as.Date(DATE), y = Value.mgperkg, color = Country))+
    geom_point(position = position_dodge(), alpha = .7)+
-   scale_color_viridis_d(end = .9, option = "viridis")+
+   scale_color_viridis_d(end = .9, option = "inferno")+
    geom_smooth(method = "lm", se = F)+
    coord_cartesian(ylim = c(0,20))
 

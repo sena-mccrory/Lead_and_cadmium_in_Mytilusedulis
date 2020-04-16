@@ -10,7 +10,8 @@ subtitle: "Web address for GitHub repository"
 author: "Sena McCrory"
 fontsize: 12pt
 mainfont: Times New Roman
-
+editor_options: 
+  chunk_output_type: console
 ---
 
 \newpage
@@ -24,26 +25,44 @@ mainfont: Times New Roman
 ```{r setup, include=FALSE}
 # Set your working directory
 getwd()
+
 # Load your packages
 library(tidyverse)
 library(scales)
 library(nationalparkcolors)
-library(tidyverse)
 library(viridis)
-library(sf)
-library(scales)
-library(nationalparkcolors)
-library(trend)
 
-# Set your ggplot theme
+# load data sets
+mytilus.metals <- read.csv("./Data/Processed/ICES_Mytilusedulis_Cd_Pb.csv")
+mytilus.metals$DATE <- as.Date(mytilus.metals$DATE, format = "%d/%m/%Y")
+
+mytilus.pb.monthly_post1990.interp <- read.csv("./Data/Processed/pb_monthly_post1990_interp.csv")
+mytilus.cd.monthly_post1990.interp <- read.csv("./Data/Processed/cd_monthly_post1990_interp.csv")
+mytilus.pb.monthly_post1990.interp$Month.Year <- as.Date(mytilus.pb.monthly_post1990.interp$Month.Year, format = "%Y-%m-%d")
+mytilus.cd.monthly_post1990.interp$Month.Year <- as.Date(mytilus.cd.monthly_post1990.interp$Month.Year, format = "%Y-%m-%d")
+
+# aggregate by yearly median 1979 - 2018
+yearly.data <- mytilus.metals %>%
+   group_by(MYEAR, PARAM)%>%
+   dplyr::summarise(Conc = median(Value.mgperkg))
+
+#subset post 1990
+mytilus.post1990 <- mytilus.metals%>%
+   filter(MYEAR >= 1990)%>%
+   droplevels()
+
+#change Country level order
+mytilus.post1990$Country <- factor(mytilus.post1990$Country, levels = 
+                                    c("Norway", "United Kingdom", 
+                                      "Ireland", "Denmark", "The Netherlands",
+                                      "Germany", "Spain", "Belgium", "Iceland", 
+                                      "Poland", "Lithuania"))
+
+# Set ggplot theme
 my.theme <- theme_minimal(base_size = 14)+
   theme(legend.position = "top")
 theme_set(my.theme)
-my.colors <- park_palette("CraterLake")[c(1,2,5,7)]
-
-# Load your datasets
-
-
+my.colors <- park_palette("CraterLake")[c(5,7,1,2)]
 ```
 
 
@@ -61,6 +80,20 @@ my.colors <- park_palette("CraterLake")[c(1,2,5,7)]
 
 # Exploratory Analysis 
 
+The ICES database includes *Mytilus edulis* sample data from 1979 to 2018 for X European countries. Most samples were collected near shorelines and within some enclosed bay or lake areas (Fig 1).
+
+```{r , echo=FALSE, fig.cap="my caption", out.width = '90%'}
+knitr::include_graphics("./Output/StudyRegionMap.png")
+```
+
+
+```{r, echo=FALSE, fig.cap="my caption"}
+
+```
+
+```{r, echo=FALSE, fig.cap="Yearly median concentrations of cadmium and lead in *Mytilus edulis* ICES monitoring data from 1979 to 2018."}
+
+```
 
 
 \newpage
