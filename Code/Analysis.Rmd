@@ -19,6 +19,8 @@ library(nationalparkcolors)
 library(trend)
 library(nlme)
 library(piecewiseSEM)
+library(cowplot)
+library(zoo)
 
 mytilus.metals <- read.csv("./Data/Processed/ICES_Mytilusedulis_Cd_Pb.csv")
 mytilus.metals$DATE <- as.Date(mytilus.metals$DATE, format = "%d/%m/%Y")
@@ -38,7 +40,8 @@ mytilus.cd <- mytilus.metals %>%
    filter(PARAM == "Cd"& MYEAR >= 1990)%>%
    droplevels()
 mytilus.cd.pb <- rbind(mytilus.cd, mytilus.pb)
-
+summary(mytilus.pb$Value.mgperkg)
+summary(mytilus.cd$Value.mgperkg)
 # aggregate by monthly median
 mytilus.pb.monthly_post1990 <- mytilus.pb%>%
    mutate(Month = format.Date(DATE, format = "%m"))%>%
@@ -114,12 +117,9 @@ cd.pb.monthly.combined <- rbind(mytilus.cd.monthly_post1990.interp2, mytilus.pb.
 
 ```{r}
 # write csvs of interpolated data
-write.csv(mytilus.cd.monthly_post1990.interp2, "./Data/Processed/cd_monthly_post1990_interp.csv", row.names = FALSE)
-write.csv(mytilus.pb.monthly_post1990.interp2, "./Data/Processed/pb_monthly_post1990_interp.csv", row.names = FALSE)
+#write.csv(mytilus.cd.monthly_post1990.interp2, "./Data/Processed/cd_monthly_post1990_interp.csv", row.names = FALSE)
+#write.csv(mytilus.pb.monthly_post1990.interp2, "./Data/Processed/pb_monthly_post1990_interp.csv", row.names = FALSE)
 
-#seem to be a lot more weird stuff going on before 1990, fewer samples? 
-
-#might be interesting to restrict the analysis to just post 1990? there is obviously a big decrease in pre 1990, but has the trend continued?
 ```
 
 ## how have metal concentrations in Mytilus edulis changed over time?
@@ -137,7 +137,7 @@ cd.monthly.ts_trend
 summary(cd.monthly.ts_trend) # starts on 1990 Feb, so month 1 is Feb
 sea.sens.slope(cd.monthly.ts)
 
-#pb
+#pb - remove really high outlier? replace with something else?? can't have a missing month
 pb.monthly.ts <- ts(mytilus.pb.monthly_post1990.interp2$Conc,
                     frequency = 12,
                     start = c(1990,1,1),
@@ -167,20 +167,28 @@ ggplot(cd.pb.monthly.combined, aes(x = as.Date(Month.Year), y = Conc, color = PA
    theme(legend.position = "none")+
    labs(x= "Date", y = "Conc of metal (mg/kg wet wt)")
 
-ggplot(mytilus.cd.monthly_post1990.interp, aes(x = as.Date(Month.Year), y = Conc))+
-   geom_line(color = my.colors[1])+
+cd.monthly.interp <- ggplot(mytilus.cd.monthly_post1990.interp2, aes(x = as.Date(Month.Year), y = Conc))+
+   #geom_line(color = my.colors[1])+
    geom_point(aes(shape = as.factor(estimated)), color = my.colors[1])+
-   scale_shape_manual(values = c(16,1))+
+   geom_smooth(method = "lm", se = FALSE, color = my.colors[1])+
+   scale_shape_manual(values = c(16,1), labels = c("actual", "interpolated"))+
    #coord_cartesian(ylim=c(0, 10))+
-   theme(legend.position = "none")+
-   labs(x= "Date", y = "Conc of metal (mg/kg wet wt)")
-ggplot(mytilus.pb.monthly_post1990.interp, aes(x = as.Date(Month.Year), y = Conc))+
-   geom_line(color = my.colors[2])+
+   theme(axis.text.x = element_blank())+
+   labs(x= "", y = "Conc of Cd (mg/kg wet wt)", shape = "")+
+   guides(shape = guide_legend(override.aes = list(color = "darkgray")))
+   #stat_smooth_func(geom="text",method="lm",hjust=0,parse=TRUE) # need outviz package for this
+   #scale_shape_discrete(values = c(16,1))
+cd.monthly.interp
+pb.monthly.interp <- ggplot(subset(mytilus.pb.monthly_post1990.interp2, Conc < 20), aes(x = as.Date(Month.Year), y = Conc))+
+   #geom_line(color = my.colors[2])+
    geom_point(aes(shape = as.factor(estimated)), color = my.colors[2])+
    scale_shape_manual(values = c(16,1))+
+   geom_smooth(method = "lm", se = FALSE, color = my.colors[2])+
    coord_cartesian(ylim=c(0, 10))+
    theme(legend.position = "none")+
-   labs(x= "Date", y = "Conc of metal (mg/kg wet wt)")
+   labs(x= "Date", y = "Conc of Pb (mg/kg wet wt)")
+pb.monthly.interp # remove that one really high outlier?? it is pulling the lm
+plot_grid(cd.monthly.interp, pb.monthly.interp, nrow = 2)
 
 ```
 
