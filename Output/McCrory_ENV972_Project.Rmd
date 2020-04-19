@@ -106,7 +106,7 @@ ggplot(yearly.data, aes(x=MYEAR, y = Conc, color = PARAM))+
 
 
 ```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Sample locations from 1990 to 2018", out.width = '90%'}
-#knitr::include_graphics("./Output/StudyRegionMap.png")
+knitr::include_graphics("C:/Users/senam/Box Sync/My Documents/MEM classes/Duke Spring 2020/DataAnalytics/ENV872_FinalProject/Output/StudyRegionMap.png")
 ```
 
 
@@ -202,7 +202,7 @@ plot_grid(cd.monthly.interp, pb.monthly.interp, nrow = 2)
 
 ## Question 2: Do cadmium and lead concentrations in *Mytilus edulis* differ by country?
 
-```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE,fig.height=8, fig.cap="Concentrations of cadmium and lead in *Mytilus edulis* for countries with more than 100 samples between 1990 and 2018."}
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Distribution of cadmium and lead concentrations in *Mytilus edulis* for countries with more than 100 samples between 1990 and 2018."}
 # country violin
 ggplot(cd.pb.countries.combined, aes(x=Country, y = Value.mgperkg, fill = PARAM))+
    geom_violin(draw_quantiles = .5)+
@@ -210,7 +210,9 @@ ggplot(cd.pb.countries.combined, aes(x=Country, y = Value.mgperkg, fill = PARAM)
    scale_fill_manual(values = my.colors)+
    facet_wrap(~PARAM, nrow = 2)+
    theme(legend.position = "none",
-         axis.text.x = element_text(angle = 45,  hjust = 1))
+         axis.title.x = element_blank(),
+         axis.text.x = element_text(angle = 45,  hjust = 1))+
+   labs(y="mg metal/kg wt wt")
 
 ```
 
