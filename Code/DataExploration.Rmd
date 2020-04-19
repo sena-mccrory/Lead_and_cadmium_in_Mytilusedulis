@@ -194,3 +194,13 @@ dev.off()
 ```
 
 
+# what about detection limits?
+```{r}
+detectionlimit.summary <- mytilus.post1990 %>%
+   group_by(PARAM, DETLI.mgperkg)%>%
+   tally()
+summary(mytilus.post1990$DETLI.mgperkg[mytilus.post1990$PARAM =="Cd"])
+summary(mytilus.post1990$DETLI.mgperkg[mytilus.post1990$PARAM =="Pb"])
+write.csv(detectionlimit.summary, "./Data/Processed/DetectionLimitSummary_post1990_cd_pb.csv", row.names = FALSE)
+```
+

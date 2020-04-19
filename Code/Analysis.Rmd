@@ -247,7 +247,7 @@ dunn.test(cd.countries$Value.mgperkg, g=cd.countries$Country, method = "bh") # a
 kruskal.test(pb.countries$Value.mgperkg, pb.countries$Country) # distrib are different
 dunn.test(pb.countries$Value.mgperkg, g=pb.countries$Country, method = "bh") # all are diff from each other except for The netherlands and UK, Germany and Ireland, Spain ad Neth, Spain and UK, and UK and NEth
 
-# plot distrib box plots
+# plot distrib violin plots
 ggplot(cd.pb.countries.combined, aes(x=Country, y = Value.mgperkg, fill = PARAM))+
    geom_violin(draw_quantiles = .5)+
    scale_y_log10(labels = trans_format("log10", math_format(10^.x)))+
