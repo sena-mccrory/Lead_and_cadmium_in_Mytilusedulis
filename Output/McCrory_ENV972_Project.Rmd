@@ -41,6 +41,11 @@ mytilus.cd.monthly_post1990.interp <- read.csv("./Data/Processed/cd_monthly_post
 mytilus.pb.monthly_post1990.interp$Month.Year <- as.Date(mytilus.pb.monthly_post1990.interp$Month.Year, format = "%Y-%m-%d")
 mytilus.cd.monthly_post1990.interp$Month.Year <- as.Date(mytilus.cd.monthly_post1990.interp$Month.Year, format = "%Y-%m-%d")
 
+cd.countries <- read.csv("./Data/Processed/ICES_mytilusedulis_cd_countriesmorethan100.csv")
+pb.countries <- read.csv("./Data/Processed/ICES_mytilusedulis_pb_countriesmorethan100.csv")
+cd.countries$DATE <- as.Date(cd.countries$DATE , format = "%Y-%m-%d")
+pb.countries$DATE <- as.Date(pb.countries$DATE , format = "%Y-%m-%d")
+
 # aggregate by yearly median 1979 - 2018
 yearly.data <- mytilus.metals %>%
    group_by(MYEAR, PARAM)%>%
@@ -57,6 +62,7 @@ mytilus.post1990$Country <- factor(mytilus.post1990$Country, levels =
                                       "Ireland", "Denmark", "The Netherlands",
                                       "Germany", "Spain", "Belgium", "Iceland", 
                                       "Poland", "Lithuania"))
+
 
 # Set ggplot theme
 my.theme <- theme_minimal(base_size = 14)+
@@ -137,6 +143,17 @@ ggplot(mytilus.post1990 %>%
 
 
 ## Question 2: Do cadmium and lead concentrations in *Mytilus edulis* differ by country?
+
+```{r, echo=FALSE,error=FALSE, message=FALSE, warning=FALSE, fig.cap="Concentrations of cadmium and lead in *Mytilus edulis* for countries with more than 100 samples between 1990 and 2018."}
+# country violin
+ggplot(cd.pb.countries.combined, aes(x=Country, y = Value.mgperkg, fill = PARAM))+
+   geom_violin(draw_quantiles = .5)+
+   scale_y_log10(labels = trans_format("log10", math_format(10^.x)))+
+   scale_fill_manual(values = my.colors)+
+   facet_wrap(~PARAM, nrow = 2)+
+   theme(legend.position = "none")
+
+```
 
 
 

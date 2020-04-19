@@ -21,6 +21,8 @@ library(nlme)
 library(piecewiseSEM)
 library(cowplot)
 library(zoo)
+library(car)
+library(dunn.test)
 
 mytilus.metals <- read.csv("./Data/Processed/ICES_Mytilusedulis_Cd_Pb.csv")
 mytilus.metals$DATE <- as.Date(mytilus.metals$DATE, format = "%d/%m/%Y")
@@ -148,14 +150,27 @@ summary(pb.monthly.ts_trend)
 sea.sens.slope(pb.monthly.ts)
 
 #heirarchical model - with all sample data post 1990, Country as random effect
-cd.changeovertime.mixed <- lme(data = mytilus.pb,
-                               log(Value.mgperkg+1) ~ MYEAR,random = ~1|Country)
+#cd
+cd.changeovertime.mixed <- lme(data = mytilus.cd,
+                               log(Value.mgperkg+1^-40) ~ Country,random = ~1|MYEAR)
 summary(cd.changeovertime.mixed)
 rsquared(cd.changeovertime.mixed)
-cd.changeovertime.fixed <- gls(data = mytilus.pb,
-                               log(Value.mgperkg+1) ~ MYEAR)
+
+cd.changeovertime.fixed <- gls(data = mytilus.cd,
+                               log(Value.mgperkg+1^-40) ~ Country)
 summary(cd.changeovertime.fixed)
 anova(cd.changeovertime.mixed, cd.changeovertime.fixed) # mixed is beter
+#pb
+pb.changeovertime.mixed <- lme(data = mytilus.pb,
+                               log(Value.mgperkg+1) ~ MYEAR,random = ~1|Country)
+summary(pb.changeovertime.mixed)
+rsquared(pb.changeovertime.mixed)
+
+pb.changeovertime.fixed <- gls(data = mytilus.pb,
+                               log(Value.mgperkg+1) ~ MYEAR)
+summary(pb.changeovertime.fixed)
+anova(pb.changeovertime.mixed, pb.changeovertime.fixed) # mixed is beter
+
 
 # plot of monthly conc - with interpolated points
 ggplot(cd.pb.monthly.combined, aes(x = as.Date(Month.Year), y = Conc, color = PARAM))+
@@ -204,6 +219,7 @@ country.order.pb <- mytilus.pb%>%
    tally(sort = T, name = "n_bycountry")
 # exclude countries with less than 100 samples
 
+
 # add sample number by country to each df
 mytilus.cd <- left_join(mytilus.cd, country.order.cd, by = "Country")
 mytilus.pb <- left_join(mytilus.pb, country.order.pb, by = "Country")
@@ -215,9 +231,31 @@ summary(mytilus.cd$Country)
 cd.countries <- mytilus.cd %>%
    filter(n_bycountry > 100)%>%
    droplevels()
+summary(cd.countries$Country)
 pb.countries <- mytilus.pb %>%
    filter(n_bycountry > 100)%>%
    droplevels()
+summary(cd.countries$Country)
+cd.pb.countries.combined <- rbind(cd.countries, pb.countries)
+
+write.csv(cd.pb.countries.combined, "./Data/Processed/ICES_mytilusedulis_cd_pb_countriesmorethan100.csv", row.names = FALSE)
+
+
+# non parametric - kruskall wallis
+kruskal.test(cd.countries$Value.mgperkg, cd.countries$Country) # distrib are different
+dunn.test(cd.countries$Value.mgperkg, g=cd.countries$Country, method = "bh") # all countries are different from each other except for Germany and UK
+kruskal.test(pb.countries$Value.mgperkg, pb.countries$Country) # distrib are different
+dunn.test(pb.countries$Value.mgperkg, g=pb.countries$Country, method = "bh") # all are diff from each other except for The netherlands and UK, Germany and Ireland, Spain ad Neth, Spain and UK, and UK and NEth
+
+# plot distrib box plots
+ggplot(cd.pb.countries.combined, aes(x=Country, y = Value.mgperkg, fill = PARAM))+
+   geom_violin(draw_quantiles = .5)+
+   scale_y_log10(labels = trans_format("log10", math_format(10^.x)))+
+   scale_fill_manual(values = my.colors)+
+   facet_wrap(~PARAM, nrow = 2)+
+   theme(legend.position = "none")
+
+
 
 # plot over time
 ggplot(cd.countries %>% arrange(-n_bycountry), 
@@ -232,15 +270,46 @@ ggplot(pb.countries %>% arrange(-n_bycountry), aes(x= as.Date(DATE), y = Value.m
    scale_color_viridis_d(end = .9, option = "inferno")+
    geom_smooth(method = "lm", se = F)+
    coord_cartesian(ylim = c(0,20))
+```
 
+```{r}
+# two-way ANOVA - assumptions not met
+cd.anova <- aov(log(Value.mgperkg+1^-40) ~ as.factor(MYEAR) * Country, data = cd.countries)
+summary(cd.anova)
+TukeyHSD(cd.anova)
+bartlett.test(log(cd.countries$Value.mgperkg+1^-40), g = cd.countries$MYEAR) # unequal variance by year
+bartlett.test(log(cd.countries$Value.mgperkg+1^-40), g = cd.countries$Country) # unequal variance by country
 
-ancova.cd <- lm(log(Value.mgperkg+1) ~ MYEAR * Country, 
+#ANCOVA - assumptions not met
+ancova.cd <- lm(log(Value.mgperkg+1^-40) ~ MYEAR * Country, 
                 data = cd.countries)
 summary(ancova.cd)
+plot(ancova.cd)
+#none of them are normally distributed...
+shapiro.test(log(cd.countries$Value.mgperkg[cd.countries$Country == "Germany"]))
+shapiro.test(log(cd.countries$Value.mgperkg[cd.countries$Country == "The Netherlands"]))
+shapiro.test(log(cd.countries$Value.mgperkg[cd.countries$Country == "Denmark"]))
+shapiro.test(log(cd.countries$Value.mgperkg[cd.countries$Country == "Ireland"]))
+shapiro.test(log(cd.countries$Value.mgperkg[cd.countries$Country == "United Kingdom"]))
+shapiro.test(log(cd.countries$Value.mgperkg[cd.countries$Country == "Norway"]))
+lmtest::bptest(ancova.cd) #heteroskedastic, p < 0.001
+car::vif(ancova.cd) # due to interaction factor, VIF for country is very high 
+outlierTest(ancova.cd) # several problematic outliers
 
 
-ancova.pb <- lm(log(Value.mgperkg+1) ~ MYEAR * Country, data = pb.countries)
+ancova.pb <- lm(log(Value.mgperkg+1^-40) ~ MYEAR * Country, data = pb.countries)
 summary(ancova.pb)
+plot(ancova.pb)
+#none of them are normally distributed...
+shapiro.test(log(pb.countries$Value.mgperkg[pb.countries$Country == "Germany"]))
+shapiro.test(log(pb.countries$Value.mgperkg[pb.countries$Country == "The Netherlands"]))
+shapiro.test(log(pb.countries$Value.mgperkg[pb.countries$Country == "Denmark"]))
+shapiro.test(log(pb.countries$Value.mgperkg[pb.countries$Country == "Ireland"]))
+shapiro.test(log(pb.countries$Value.mgperkg[pb.countries$Country == "United Kingdom"]))
+shapiro.test(log(pb.countries$Value.mgperkg[pb.countries$Country == "Norway"]))
+lmtest::bptest(ancova.pb) #heteroskedastic, p < 0.001
+car::vif(ancova.pb) # due to interaction factor, VIF for country is very high 
+outlierTest(ancova.pb) # several problematic outliers
 
 ```
 
