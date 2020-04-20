@@ -46,17 +46,19 @@ summary(mytilus.pb$Value.mgperkg)
 summary(mytilus.cd$Value.mgperkg)
 # aggregate by monthly median
 mytilus.pb.monthly_post1990 <- mytilus.pb%>%
-   mutate(Month = format.Date(DATE, format = "%m"))%>%
-   group_by(MYEAR,Month)%>%
+   mutate(Month = format.Date(DATE, format = "%m"),
+          SYear = format.Date(DATE, format = "%Y"))%>%
+   group_by(SYear,Month)%>%
    dplyr::summarise(Conc = median(Value.mgperkg))%>%
-   mutate(Month.Year = paste(MYEAR,Month,"01",sep = ""))
+   mutate(Month.Year = paste(SYear,Month,"01",sep = ""))
 mytilus.pb.monthly_post1990$Month.Year <- as.Date(mytilus.pb.monthly_post1990$Month.Year, format = "%Y%m%d", origin = "1970-01-01")
 
 mytilus.cd.monthly_post1990 <- mytilus.cd%>%
-   mutate(Month = format.Date(DATE, format = "%m"))%>%
-   group_by(MYEAR,Month)%>%
+    mutate(Month = format.Date(DATE, format = "%m"),
+          SYear = format.Date(DATE, format = "%Y"))%>%
+   group_by(SYear,Month)%>%
    dplyr::summarise(Conc = median(Value.mgperkg))%>%
-   mutate(Month.Year = paste(MYEAR,Month,"01",sep = ""))
+   mutate(Month.Year = paste(SYear,Month,"01",sep = ""))
 mytilus.cd.monthly_post1990$Month.Year <- as.Date(mytilus.cd.monthly_post1990$Month.Year, format = "%Y%m%d", origin = "1970-01-01")
 ```
 
@@ -76,10 +78,10 @@ dim(mytilus.cd.monthly_post1990) # still have ~ 1/3 of months missing
 interpolation for monthly time series analysis
 ```{r}
 # monthly dataset to join
-Months <- as.data.frame(seq(as.Date("1990-02-01"),as.Date("2018-12-01"), "month"))
+Months <- as.data.frame(seq(as.Date("1990-02-01"),as.Date("2019-01-01"), "month"))
 colnames(Months)
 Months <- Months %>%
-rename(Month.Year = 'seq(as.Date(\"1990-02-01\"), as.Date(\"2018-12-01\"), \"month\")')
+rename(Month.Year = "seq(as.Date(\"1990-02-01\"), as.Date(\"2019-01-01\"), \"month\")")
 class(Months$Month.Year)
 
 # spline interp - results in values < 0... not good
@@ -119,8 +121,7 @@ cd.pb.monthly.combined <- rbind(mytilus.cd.monthly_post1990.interp2, mytilus.pb.
 
 ```{r}
 # write csvs of interpolated data
-#write.csv(mytilus.cd.monthly_post1990.interp2, "./Data/Processed/cd_monthly_post1990_interp.csv", row.names = FALSE)
-#write.csv(mytilus.pb.monthly_post1990.interp2, "./Data/Processed/pb_monthly_post1990_interp.csv", row.names = FALSE)
+#write.csv(cd.pb.monthly.combined, "./Data/Processed/cd_pb_monthly_post1990_interp.csv", row.names = FALSE)
 
 ```
 
@@ -130,13 +131,14 @@ obvious decrease pre 1990, what about 1990 - 2018?
 ```{r}
 # time series trend analysis by month
 # cd
+summary(mytilus.cd.monthly_post1990.interp2$Month.Year)
 cd.monthly.ts <- ts(mytilus.cd.monthly_post1990.interp2$Conc,
                     frequency = 12,
-                    start = c(1990,1,1),
-                    end = c(2018,12,1))
+                    start = c(1990,2,1),
+                    end = c(2019,1,1))
 cd.monthly.ts_trend <- smk.test(cd.monthly.ts)
 cd.monthly.ts_trend
-summary(cd.monthly.ts_trend) # starts on 1990 Feb, so month 1 is Feb
+summary(cd.monthly.ts_trend) # starts on 1990 Feb, so month 1 is Feb - so Nov, Dec, Jan, are signig diff
 sea.sens.slope(cd.monthly.ts)
 
 #pb - remove really high outlier? replace with something else?? can't have a missing month
@@ -145,10 +147,25 @@ pb.monthly.ts <- ts(mytilus.pb.monthly_post1990.interp2$Conc,
                     start = c(1990,1,1),
                     end = c(2018,12,1))
 pb.monthly.ts_trend <- smk.test(pb.monthly.ts)
-pb.monthly.ts_trend
-summary(pb.monthly.ts_trend)
-sea.sens.slope(pb.monthly.ts)
+pb.monthly.ts_trend # no signif monotinic trend
+summary(pb.monthly.ts_trend) # October is diff
+#sea.sens.slope(pb.monthly.ts) # not signif
 
+# interpolation
+interp.summary <- cd.pb.monthly.combined %>%
+   mutate(Month = format.Date(Month.Year, format = "%m")) %>%
+   group_by(PARAM,Month,estimated)%>%
+   tally()%>%
+   pivot_wider(id_cols = c(Month, estimated), names_from = PARAM, values_from = n)%>%
+   filter(estimated == 1)%>%
+   select(Month, Cd, Pb)
+#write.csv(interp.summary, "./Data/Processed/Interpolation_monthly_summary.csv", row.names = FALSE)
+
+```
+
+
+
+```{r}
 #heirarchical model - with all sample data post 1990, Country as random effect
 #cd
 cd.changeovertime.mixed <- lme(data = mytilus.cd,
@@ -205,6 +222,8 @@ pb.monthly.interp <- ggplot(subset(mytilus.pb.monthly_post1990.interp2, Conc < 2
 pb.monthly.interp # remove that one really high outlier?? it is pulling the lm
 plot_grid(cd.monthly.interp, pb.monthly.interp, nrow = 2)
 
+
+
 ```
 
 
@@ -238,14 +257,22 @@ pb.countries <- mytilus.pb %>%
 summary(cd.countries$Country)
 cd.pb.countries.combined <- rbind(cd.countries, pb.countries)
 
-write.csv(cd.pb.countries.combined, "./Data/Processed/ICES_mytilusedulis_cd_pb_countriesmorethan100.csv", row.names = FALSE)
+#write.csv(cd.pb.countries.combined, "./Data/Processed/ICES_mytilusedulis_cd_pb_countriesmorethan100.csv", row.names = FALSE)
 
 
 # non parametric - kruskall wallis
 kruskal.test(cd.countries$Value.mgperkg, cd.countries$Country) # distrib are different
 dunn.test(cd.countries$Value.mgperkg, g=cd.countries$Country, method = "bh") # all countries are different from each other except for Germany and UK
+cd.countries.median <- cd.countries%>%
+   group_by(Country)%>%
+   dplyr::summarise(median = median(Value.mgperkg))
+print(cd.countries.median)
 kruskal.test(pb.countries$Value.mgperkg, pb.countries$Country) # distrib are different
-dunn.test(pb.countries$Value.mgperkg, g=pb.countries$Country, method = "bh") # all are diff from each other except for The netherlands and UK, Germany and Ireland, Spain ad Neth, Spain and UK, and UK and NEth
+dunn.test(pb.countries$Value.mgperkg, g=pb.countries$Country, method = "bh") # all are diff from each other except for The netherlands and UK, Germany and Ireland, Spain ad Neth, Spain and UK
+pb.countries.median <- pb.countries%>%
+   group_by(Country)%>%
+   dplyr::summarise(median = median(Value.mgperkg))
+print(pb.countries.median)
 
 # plot distrib violin plots
 ggplot(cd.pb.countries.combined, aes(x=Country, y = Value.mgperkg, fill = PARAM))+
@@ -281,7 +308,7 @@ bartlett.test(log(cd.countries$Value.mgperkg+1^-40), g = cd.countries$MYEAR) # u
 bartlett.test(log(cd.countries$Value.mgperkg+1^-40), g = cd.countries$Country) # unequal variance by country
 
 #ANCOVA - assumptions not met
-ancova.cd <- lm(log(Value.mgperkg+1^-40) ~ MYEAR * Country, 
+ancova.cd <- lm(log(Value.mgperkg+1^-40) ~ MYEAR * Country + NOINP, 
                 data = cd.countries)
 summary(ancova.cd)
 plot(ancova.cd)
@@ -297,7 +324,7 @@ car::vif(ancova.cd) # due to interaction factor, VIF for country is very high
 outlierTest(ancova.cd) # several problematic outliers
 
 
-ancova.pb <- lm(log(Value.mgperkg+1^-40) ~ MYEAR * Country, data = pb.countries)
+ancova.pb <- lm(log(Value.mgperkg+1^-40) ~ MYEAR * Country + NOINP, data = pb.countries)
 summary(ancova.pb)
 plot(ancova.pb)
 #none of them are normally distributed...

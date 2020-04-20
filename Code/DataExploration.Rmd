@@ -135,6 +135,9 @@ ggplot(mytilus.post1990, aes(x=Country, fill = PARAM))+
    scale_fill_manual(values = my.colors)+
    coord_flip()+
    labs(fill = "Metal")
+country.count <- mytilus.post1990 %>%
+   group_by(PARAM, Country)%>%
+   tally()
 
 
 # violin
@@ -173,11 +176,11 @@ st_crs(metal_points_wgs84) <- 4326
 
 ```{r}
 
-png("./Output/StudyRegionMap.png", width = 9, height = 5, units = "in", res = 150)
+png("./Output/StudyRegionMap.png", width = 8, height = 10, units = "in", res = 150)
 ggplot()+
   geom_sf(data = coastlines_global_wgs84, fill = "lightgray", color = NA, inherit.aes = FALSE)+
   geom_sf(aes(color = PARAM), data = metal_points_wgs84, inherit.aes = F,
-          size = 1.2, alpha = 0.5, shape = 1)+ 
+          size = 1.2, alpha = 0.5, shape = 18)+ 
   scale_color_manual(values = my.colors) + 
   coord_sf(xlim=c(-25, 32), ylim = c(42, 70), crs = 4326)+
   labs(color = "Mytilus edulis\nsample locations")+
@@ -188,7 +191,7 @@ ggplot()+
          panel.grid.minor = element_blank(),
          panel.border = element_rect(colour = "darkgray", 
                                      fill=NA, size=1))+
-   facet_wrap(~PARAM, nrow = 1)
+   facet_wrap(~PARAM, nrow = 2)
 dev.off()
 
 ```

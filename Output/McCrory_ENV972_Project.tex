@@ -24,26 +24,25 @@
   \usepackage[]{microtype}
   \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
 }{}
-\makeatletter
-\@ifundefined{KOMAClassName}{% if non-KOMA class
-  \IfFileExists{parskip.sty}{%
-    \usepackage{parskip}
-  }{% else
-    \setlength{\parindent}{0pt}
-    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
-}{% if KOMA class
-  \KOMAoptions{parskip=half}}
-\makeatother
 \usepackage{xcolor}
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
 \hypersetup{
-  pdftitle={Decadal trends in cadmium and lead concentrations in Mytilus edulis samples from several European nations},
+  pdftitle={Long-term trends in cadmium and lead concentrations in Mytilus edulis samples from European Atlantic Coast},
   pdfauthor={Sena McCrory},
   hidelinks,
   pdfcreator={LaTeX via pandoc}}
 \urlstyle{same} % disable monospaced font for URLs
 \usepackage[margin=2.54cm]{geometry}
+\usepackage{longtable,booktabs}
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
 \usepackage{graphicx,grffile}
 \makeatletter
 \def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
@@ -62,8 +61,8 @@
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{5}
 
-\title{Decadal trends in cadmium and lead concentrations in \emph{Mytilus
-edulis} samples from several European nations}
+\title{Long-term trends in cadmium and lead concentrations in \emph{Mytilus
+edulis} samples from European Atlantic Coast}
 \usepackage{etoolbox}
 \makeatletter
 \providecommand{\subtitle}[1]{% add subtitle to \maketitle
@@ -89,41 +88,301 @@ edulis} samples from several European nations}
 \section{Rationale and Research
 Questions}\label{rationale-and-research-questions}}
 
+Heavy metal pollution is a global environmental and human health
+concern. Cadmium and lead are two heavy metals which continue to be a
+major public health concern (according to the World Health
+Organization). Increasingly, research indicates that there may in fact
+be no ``safe'' level of cadmium or lead exposure, and so reducing levels
+of these neurotoxic, carcinogenic metals is a continuing battle for
+global health. Cadmium and lead are both naturally occurring in the
+environment, but their concentrations have been significantly increased
+due to human activity including fossil fuel combustion, industrial
+manufacturing, mining activities, among others. Monitoring the spatial
+and temporal distribution of these heavy metal pollutants is essential
+to tracking trends and identifying pollution hot spots.
+
+Concentrations of heavy metals in the soft tissues of bivalves like
+\emph{Mytilus edulis} (blue mussel) have been used for decades as a
+bioindicator for heavy metal pollution in marine environments because
+these bivalves are capable of bioaccumulating heavy metals from their
+environment. \emph{Mytilus edulis} are also harvested and farmed
+commercially for human consumption, and so monitoring heavy metals in
+their tissues is also important for managing potential human health
+risks from consumption. The International Council for the Exploration of
+the Sea (ICES) maintains an extensive database of contaminants in marine
+biota which includes sampling data for \emph{Mytilus edulis} from
+several long-term sampling programs throughout Europe dating back to
+1979. Median concentrations of cadmium and lead have decreased
+noticeable between 1979 and 1991 likely due to environmental regulations
+put in place during that time period such as the banned use of
+tetraethyl leaded gasoline; however, this decreased has slowed
+noticeably in recent decades (Fig 1).
+
+For this analysis, I explored two questions concerning cadmium and lead
+concentrations in \emph{Mytilus edulis} using the ICES monitoring data
+from 1990 to 2018.
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  How have concentrations of cadmium and lead in \emph{Mytilus edulis}
+  changed overall in the study region since the 1990s?
+\item
+  Do cadmium and lead concentrations in \emph{Mytilus edulis} differ by
+  country?
+\end{enumerate}
+
 \newpage
 
 \hypertarget{dataset-information}{%
 \section{Dataset Information}\label{dataset-information}}
+
+The global coastline data used in the study area map is publicly
+available through the National Oceanographic and Atmospheric
+Administration's (NOAA) National Center for Environmental Information
+(NCEI) online data portal located here:
+\url{https://www.ngdc.noaa.gov/mgg/shorelines/}. The L1 resolution files
+were used from the Global Self-consistent Hierarchical High-resolution
+Geography (GSHHG) dataset. Geographic reference system is WGS84 (decimal
+degrees).\\
+Data for cadmium and lead concentrations in \emph{Mytilus edulis} were
+downloaded from the International Council for the Exploration of the Sea
+(ICES) DOME database on Feb 26, 2020 (available here:
+\url{http://dome.ices.dk/views/ContaminantsBiota.aspx}). This data
+portal holds a collection of marine related monitoring data sourced from
+several regional European monitoring groups including ICES, OSPAR,
+HELCOM, AMAP, and Expert Groups. Data for all metal and metalloid
+concentrations in biota were downloaded and then filtered to include
+only \emph{Mytilus edulis} species and the specific heavy metals of
+interest for this study. The sampling data for \emph{Mytilus edulis} was
+restricted to include on concentrations reported for the ``whole soft
+body'' of the bivalve and expressed in mass of metal per mass of the
+organism wet weight. There was no information provided to allow a
+conversion from dry weight to wet weight concentrations, and so dry
+weight records were excluded from the analysis. Additionally, records
+flagged as having ``suspect'' data quality were excluded from the data
+set. Dataset variables are described in Table 1 below.
+
+\begin{longtable}[]{@{}llll@{}}
+\caption{Description and statistics for variables in ICES DOME
+monitoring data for cadmium and lead in \emph{Mytilus
+edulis}}\tabularnewline
+\toprule
+\begin{minipage}[b]{0.15\columnwidth}\raggedright
+Variable name\strut
+\end{minipage} & \begin{minipage}[b]{0.22\columnwidth}\raggedright
+Description\strut
+\end{minipage} & \begin{minipage}[b]{0.26\columnwidth}\raggedright
+Statistics for Cd\strut
+\end{minipage} & \begin{minipage}[b]{0.26\columnwidth}\raggedright
+Statistics for Pb\strut
+\end{minipage}\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+\begin{minipage}[b]{0.15\columnwidth}\raggedright
+Variable name\strut
+\end{minipage} & \begin{minipage}[b]{0.22\columnwidth}\raggedright
+Description\strut
+\end{minipage} & \begin{minipage}[b]{0.26\columnwidth}\raggedright
+Statistics for Cd\strut
+\end{minipage} & \begin{minipage}[b]{0.26\columnwidth}\raggedright
+Statistics for Pb\strut
+\end{minipage}\tabularnewline
+\midrule
+\endhead
+\begin{minipage}[t]{0.15\columnwidth}\raggedright
+PARAM\strut
+\end{minipage} & \begin{minipage}[t]{0.22\columnwidth}\raggedright
+Parameter\strut
+\end{minipage} & \begin{minipage}[t]{0.26\columnwidth}\raggedright
+Cd -- cadmium (6762 records)\strut
+\end{minipage} & \begin{minipage}[t]{0.26\columnwidth}\raggedright
+Pb -- lead (6709 records)\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.15\columnwidth}\raggedright
+MYEAR\strut
+\end{minipage} & \begin{minipage}[t]{0.22\columnwidth}\raggedright
+Monitoring year\strut
+\end{minipage} & \begin{minipage}[t]{0.26\columnwidth}\raggedright
+1990 - 2018\strut
+\end{minipage} & \begin{minipage}[t]{0.26\columnwidth}\raggedright
+1990 - 2018\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.15\columnwidth}\raggedright
+DATE\strut
+\end{minipage} & \begin{minipage}[t]{0.22\columnwidth}\raggedright
+Sample date\strut
+\end{minipage} & \begin{minipage}[t]{0.26\columnwidth}\raggedright
+February 6, 1990 to Feb 27, 2019\strut
+\end{minipage} & \begin{minipage}[t]{0.26\columnwidth}\raggedright
+February 6, 1990 to Feb 27, 2019\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.15\columnwidth}\raggedright
+Latitude and Longitude\strut
+\end{minipage} & \begin{minipage}[t]{0.22\columnwidth}\raggedright
+units: decimal degrees\strut
+\end{minipage} & \begin{minipage}[t]{0.26\columnwidth}\raggedright
+\strut
+\end{minipage} & \begin{minipage}[t]{0.26\columnwidth}\raggedright
+\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.15\columnwidth}\raggedright
+Country\strut
+\end{minipage} & \begin{minipage}[t]{0.22\columnwidth}\raggedright
+Country where measurement was reported\strut
+\end{minipage} & \begin{minipage}[t]{0.26\columnwidth}\raggedright
+\strut
+\end{minipage} & \begin{minipage}[t]{0.26\columnwidth}\raggedright
+\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.15\columnwidth}\raggedright
+Value.mgperkg\strut
+\end{minipage} & \begin{minipage}[t]{0.22\columnwidth}\raggedright
+Concentration of contaminant in subsample. Units: mg metal/kg organism
+mass (wet weight of whole soft body).\strut
+\end{minipage} & \begin{minipage}[t]{0.26\columnwidth}\raggedright
+Cd: range DL -- 38.9; median 0.18; mean 0.32\strut
+\end{minipage} & \begin{minipage}[t]{0.26\columnwidth}\raggedright
+Pb: range DL - 98.01; median 0.28; mean 0.01\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.15\columnwidth}\raggedright
+NOINP\strut
+\end{minipage} & \begin{minipage}[t]{0.22\columnwidth}\raggedright
+Number of individuals included in the subsample\strut
+\end{minipage} & \begin{minipage}[t]{0.26\columnwidth}\raggedright
+range 1-703\strut
+\end{minipage} & \begin{minipage}[t]{0.26\columnwidth}\raggedright
+range 1-703\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.15\columnwidth}\raggedright
+DETLI.mgperkg\strut
+\end{minipage} & \begin{minipage}[t]{0.22\columnwidth}\raggedright
+Reported detection limit of measurement equipment, units in mg/kg\strut
+\end{minipage} & \begin{minipage}[t]{0.26\columnwidth}\raggedright
+range 0.000007 to 1; 1792 unreported\strut
+\end{minipage} & \begin{minipage}[t]{0.26\columnwidth}\raggedright
+range 0.0001 - 0.6; 1736 unreported\strut
+\end{minipage}\tabularnewline
+\begin{minipage}[t]{0.15\columnwidth}\raggedright
+QFLAG\strut
+\end{minipage} & \begin{minipage}[t]{0.22\columnwidth}\raggedright
+Quality flag (see DOME metadata for full description of codes)\strut
+\end{minipage} & \begin{minipage}[t]{0.26\columnwidth}\raggedright
+24 \textless; 1 D; 2 Q; 6735 NA\strut
+\end{minipage} & \begin{minipage}[t]{0.26\columnwidth}\raggedright
+69 \textless; 0 D; 5 Q; 6635 NA\strut
+\end{minipage}\tabularnewline
+\bottomrule
+\end{longtable}
 
 \newpage
 
 \hypertarget{exploratory-analysis}{%
 \section{Exploratory Analysis}\label{exploratory-analysis}}
 
-The ICES database includes \emph{Mytilus edulis} sample data from 1979
-to 2018 for X European countries. Most samples were collected near
-shorelines and within some enclosed bay or lake areas (Fig 1).
+\hypertarget{geographic-distribution-of-samples}{%
+\subsection{Geographic distribution of
+samples}\label{geographic-distribution-of-samples}}
+
+\begin{figure}
+\includegraphics[width=0.9\linewidth]{C:/Users/senam/Box Sync/My Documents/MEM classes/Duke Spring 2020/DataAnalytics/ENV872_FinalProject/Output/StudyRegionMap} \caption{Sample locations from 1990 to 2018}\label{fig:unnamed-chunk-1}
+\end{figure}
+
+Sample locations were highly clustered near European Atlantic and North
+Sea shorelines and were similar for cadmium and lead (Fig --). The total
+number of samples during the study period varied significantly by
+country. For both metals, Norway alone accounted for about 43 percent of
+all the records (Fig ---). The top four countries with the most records
+(Norway, UK, Ireland, and Denmark) accounted for 90.9 percent of all
+records for cadmium and 89.3 percent of all records for lead. In
+general, sample numbers were similar between cadmium and lead because in
+many cases each \emph{Mytilus edulis} sample was tested for both types
+of metals except Spain did not include many records for cadmium.
+Sampling records were sparse for coastlines in the Baltic Sea. Countries
+which did not include any sampling records in this database include
+France, Sweden, Finland, Estonia, Lithuania, and Poland.
 
 \begin{figure}
 \centering
-\includegraphics{McCrory_ENV972_Project_files/figure-latex/unnamed-chunk-1-1.pdf}
-\caption{Yearly median concentrations of cadmium and lead in
-\emph{Mytilus edulis} ICES monitoring data from 1979 to 2018.}
+\includegraphics{McCrory_ENV972_Project_files/figure-latex/unnamed-chunk-2-1.pdf}
+\caption{Number of cadmium and lead monitoring records (\emph{Mytilus
+edulis}) by country between 1990 and 2019.}
 \end{figure}
 
-\begin{figure}
-\includegraphics[width=0.9\linewidth]{C:/Users/senam/Box Sync/My Documents/MEM classes/Duke Spring 2020/DataAnalytics/ENV872_FinalProject/Output/StudyRegionMap} \caption{Sample locations from 1990 to 2018}\label{fig:unnamed-chunk-2}
-\end{figure}
+\hypertarget{temporal-distribution-of-sample-data}{%
+\subsection{Temporal distribution of sample
+data}\label{temporal-distribution-of-sample-data}}
+
+Yearly median concentrations in \emph{Mytilus edulis} for both cadmium
+and lead concentrations show a noticeable decrease between 1979 to about
+1990 (Fig --). After 1990, however, it is unclear whether there
+continues to be a decrease in heavy metal concentration; a monthly time
+series analysis is used to determine whether a there is a monotonic
+trend after 1990. Additionally, monitoring data was more sparse before
+1990 and too much interpolation would be needed to include it in a trend
+analysis. For both metals, April to July were most likely to have
+missing sample data during the study period and September through
+November were the most compete months with no missing monthly data.
 
 \begin{figure}
 \centering
 \includegraphics{McCrory_ENV972_Project_files/figure-latex/unnamed-chunk-3-1.pdf}
+\caption{Yearly median concentrations of cadmium and lead in
+\emph{Mytilus edulis} ICES monitoring data from 1979 to 2018.}
+\end{figure}
+
+\begin{longtable}[]{@{}rrr@{}}
+\caption{Summary of the number times each month was interpolated over
+the study period from Feb 1990 to Jan 2019.}\tabularnewline
+\toprule
+Month & Cd & Pb\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+Month & Cd & Pb\tabularnewline
+\midrule
+\endhead
+1 & 13 & 12\tabularnewline
+2 & 7 & 8\tabularnewline
+3 & 6 & 6\tabularnewline
+4 & 16 & 16\tabularnewline
+5 & 21 & 21\tabularnewline
+6 & 20 & 20\tabularnewline
+7 & 20 & 21\tabularnewline
+8 & 7 & 7\tabularnewline
+9 & 0 & 0\tabularnewline
+10 & 0 & 0\tabularnewline
+11 & 0 & 0\tabularnewline
+12 & 7 & 7\tabularnewline
+\bottomrule
+\end{longtable}
+
+\hypertarget{distribution-of-cadmium-and-lead-sample-concentrations}{%
+\subsection{Distribution of cadmium and lead sample
+concentrations}\label{distribution-of-cadmium-and-lead-sample-concentrations}}
+
+Concentrations for cadmium ranged from below the instrument detection
+limit to 98.1 mg/kg with a median of 0.28 mg/kg and mean of 0.81 mg/kg.
+Lead concentrations ranged from below the detection limit to 38.9 mg/kg
+with a median of 0.18 mg/kg and mean of 0.32 mg/kg. Both metals
+exhibited a strong positive skew and so are displayed on a log scale in
+most figures. Detection limits for measurements instruments ranged
+substantially for both metal samples (Table 1), and many samples
+concentrations were within the range of detection limits for other
+samples (Fig **).
+
+\begin{figure}
+\centering
+\includegraphics{McCrory_ENV972_Project_files/figure-latex/unnamed-chunk-5-1.pdf}
 \caption{Distirbution of sample concentrations of cadmium and lead in
 \emph{Mytilus edulis} from ICES data 1990 to 2019.}
 \end{figure}
 
 \begin{figure}
 \centering
-\includegraphics{McCrory_ENV972_Project_files/figure-latex/unnamed-chunk-4-1.pdf}
+\includegraphics{McCrory_ENV972_Project_files/figure-latex/unnamed-chunk-6-1.pdf}
 \caption{Cadmium and lead sample concentrations over time for ICES
 \emph{Mytilus edulis} monitoring. Grey lines show the various instrument
 detection limits reported in each the data set.}
@@ -139,9 +398,24 @@ detection limits reported in each the data set.}
 concentrations in \emph{Mytilus edulis} changed over
 time?}{Question 1: How have cadmium and lead concentrations in Mytilus edulis changed over time?}}\label{question-1-how-have-cadmium-and-lead-concentrations-in-mytilus-edulis-changed-over-time}}
 
+Data for lead and cadmium concentrations were aggregated using the
+monthly median for each month between February 1990 to January 2019.
+Months with no sample data were interpolated using a linear
+interpolation method (Fig **).
+
+Cadmium concentrations in \emph{Mytilus edulis} have decreased
+significantly over the study period by an estimated 0.002 mg/kg from
+1990 to 2019 (Seasonal Mann-Kendall; S = -1044; p \textless0.0001,
+Seasonal Sen's Slope). Cadmium concentrations also exhibited a seasonal
+variation where concentrations in November, December, and January
+exhibited significantly different decreasing trend than other months
+(Seasonal Mann-Kendall, p \textless{} 0.05). Lead showed no significant
+monotonic trend over the study period (Seasonal Mann-Kendall; S = -284;
+p = 0.125).
+
 \begin{figure}
 \centering
-\includegraphics{McCrory_ENV972_Project_files/figure-latex/unnamed-chunk-5-1.pdf}
+\includegraphics{McCrory_ENV972_Project_files/figure-latex/unnamed-chunk-7-1.pdf}
 \caption{Concentrations of cadmium and lead in \emph{Mytilus edulis} in
 ICES study region from 1990 to 2018.}
 \end{figure}
@@ -151,12 +425,58 @@ ICES study region from 1990 to 2018.}
 concentrations in \emph{Mytilus edulis} differ by
 country?}{Question 2: Do cadmium and lead concentrations in Mytilus edulis differ by country?}}\label{question-2-do-cadmium-and-lead-concentrations-in-mytilus-edulis-differ-by-country}}
 
+Comparison of concentrations between countries was restricted to only
+countries with more than 100 records over the study period. A
+non-parametric group-wise comparison was used to compare concentration
+distributions by country.
+
+Analyses for cadmium revealed that concentrations distributions differed
+significantly between all countries except Germany and the UK which were
+statistically similar (Kruskal-Wallis Rank Sum Test, chi-squared =
+897.8, df = 5, p \textless{} 0.0001; Dunn's Test with Benjamin-Hochberg
+(1995) adjustment, p \textless{} 0.05 for all comparisons except Germany
+and UK). The Netherlands had the highest distribution of cadmium
+concentrations with a median of 0.41 mg/kg (see Table 3).
+
+Lead concentration distributions between countries also differed
+significantly by country (Kruskal-Wallis Rank Sum Test, chi-squared =
+1302.8, df = 6, p \textless{} 0.0001; Dunn's Test with Benjamin-Hochberg
+(1995) adjustment, alpha = 0.05). The Netherlands, Spain, and UK had the
+highest distribution of lead concentrations and were statistically to
+each other. Next highest lead concentrations were in Norway, then
+Germany and Ireland (not significantly different from each other), and
+then the lowest lead concentrations were in Denmark (Dunn's Test, p
+\textless{} 0.05).
+
 \begin{figure}
 \centering
-\includegraphics{McCrory_ENV972_Project_files/figure-latex/unnamed-chunk-6-1.pdf}
-\caption{Concentrations of cadmium and lead in \emph{Mytilus edulis} for
-countries with more than 100 samples between 1990 and 2018.}
+\includegraphics{McCrory_ENV972_Project_files/figure-latex/unnamed-chunk-8-1.pdf}
+\caption{Distribution of cadmium and lead concentrations in
+\emph{Mytilus edulis} for countries with more than 100 samples between
+1990 and 2018.}
 \end{figure}
+
+\begin{longtable}[]{@{}lll@{}}
+\caption{Summary of median concentrations of cadmium and lead in
+\emph{Mytilus edulis} by country during the study period from 1990 --
+2019.}\tabularnewline
+\toprule
+Country & Median Cd conc (mg/kg) & Median Pb conc (mg/kg)\tabularnewline
+\midrule
+\endfirsthead
+\toprule
+Country & Median Cd conc (mg/kg) & Median Pb conc (mg/kg)\tabularnewline
+\midrule
+\endhead
+The Netherlands & 0.41 & 0.55\tabularnewline
+Spain & NA & 0.49\tabularnewline
+Norway & 0.21 & 0.25\tabularnewline
+Germany & 0.2 & 0.24\tabularnewline
+United Kingdom & 0.191 & 0.54\tabularnewline
+Denmark & 0.164 & 0.15\tabularnewline
+Ireland & 0.11 & 0.22\tabularnewline
+\bottomrule
+\end{longtable}
 
 \newpage
 

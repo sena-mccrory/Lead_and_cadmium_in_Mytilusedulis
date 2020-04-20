@@ -1,0 +1,5 @@
+Code,Description,CodeType,Deprecated,Created,Modified,
+<,less than,QFLAG,False,2006-10-23,2006-10-23,
+>,greater than,QFLAG,False,2009-10-29,2009-10-29,
+D,reported value is less than the detection limit (DETLI),QFLAG,False,2006-10-23,2006-10-23,
+Q,reported value is less than the limit of quantification (LMQNT),QFLAG,False,2006-10-23,2006-10-23,
