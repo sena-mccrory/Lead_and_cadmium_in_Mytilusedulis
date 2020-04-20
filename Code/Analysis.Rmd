@@ -153,13 +153,16 @@ summary(pb.monthly.ts_trend) # October is diff
 
 # interpolation
 interp.summary <- cd.pb.monthly.combined %>%
-   mutate(Month = format.Date(Month.Year, format = "%m")) %>%
+   mutate(Month = format.Date(Month.Year, format = "%B")) %>%
    group_by(PARAM,Month,estimated)%>%
    tally()%>%
    pivot_wider(id_cols = c(Month, estimated), names_from = PARAM, values_from = n)%>%
-   filter(estimated == 1)%>%
-   select(Month, Cd, Pb)
-#write.csv(interp.summary, "./Data/Processed/Interpolation_monthly_summary.csv", row.names = FALSE)
+   filter(estimated == 0)%>%
+   select(Month, Cd, Pb)%>%
+   mutate(Cd = Cd/29, Pb = Pb/29)
+interp.summary$Month <- factor(interp.summary$Month, levels = month.name)
+
+write.csv(interp.summary %>% arrange(Month), "./Data/Processed/Interpolation_monthly_summary.csv", row.names = FALSE)
 
 ```
 
